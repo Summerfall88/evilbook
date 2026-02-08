@@ -25,7 +25,7 @@ export default {
   				'sans-serif'
   			],
   			sans: [
-  				'Montserrat',
+  				'Source Sans Pro',
   				'ui-sans-serif',
   				'system-ui',
   				'sans-serif',
