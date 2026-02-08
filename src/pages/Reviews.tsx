@@ -5,12 +5,14 @@ import { Input } from "@/components/ui/input";
 import ReviewCard from "@/components/ReviewCard";
 import ReviewDialog from "@/components/ReviewDialog";
 import { getReviews, saveReview, deleteReview, Review } from "@/data/reviews";
+import { useAdmin } from "@/hooks/useAdmin";
 
 const Reviews = () => {
   const [reviews, setReviews] = useState(getReviews);
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingReview, setEditingReview] = useState<Review | null>(null);
+  const isAdmin = useAdmin();
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -35,7 +37,7 @@ const Reviews = () => {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-x-hidden">
       <section className="container mx-auto px-4 py-12">
         <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-10">
           <div>
@@ -44,15 +46,17 @@ const Reviews = () => {
               Все рецензии
             </h1>
           </div>
-          <Button
-            onClick={() => {
-              setEditingReview(null);
-              setDialogOpen(true);
-            }}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
-          >
-            <Plus size={16} /> Новая рецензия
-          </Button>
+          {isAdmin && (
+            <Button
+              onClick={() => {
+                setEditingReview(null);
+                setDialogOpen(true);
+              }}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
+            >
+              <Plus size={16} /> Новая рецензия
+            </Button>
+          )}
         </div>
 
         {/* Search */}
@@ -76,10 +80,10 @@ const Reviews = () => {
               <div key={review.id} className="animate-fade-in" style={{ animationDelay: `${i * 60}ms` }}>
                 <ReviewCard
                   review={review}
-                  onClick={() => {
+                  onClick={isAdmin ? () => {
                     setEditingReview(review);
                     setDialogOpen(true);
-                  }}
+                  } : undefined}
                 />
               </div>
             ))}
@@ -87,13 +91,15 @@ const Reviews = () => {
         )}
       </section>
 
-      <ReviewDialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        review={editingReview}
-        onSave={handleSave}
-        onDelete={handleDelete}
-      />
+      {isAdmin && (
+        <ReviewDialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          review={editingReview}
+          onSave={handleSave}
+          onDelete={handleDelete}
+        />
+      )}
     </div>
   );
 };

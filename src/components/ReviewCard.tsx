@@ -16,7 +16,7 @@ const ReviewCard = ({ review, onClick }: ReviewCardProps) => {
   return (
     <article
       onClick={onClick}
-      className="group cursor-pointer bg-card border border-border/50 rounded-lg overflow-hidden transition-all duration-300 hover:border-gold/30 hover:shadow-[0_0_30px_-10px_hsl(42,60%,55%,0.15)]"
+      className={`group bg-card border border-border/50 rounded-lg overflow-hidden transition-all duration-300 hover:border-gold/30 hover:shadow-[0_0_30px_-10px_hsl(42,60%,55%,0.15)] ${onClick ? "cursor-pointer" : ""}`}
     >
       <div className="aspect-[2/3] overflow-hidden relative">
         <img
