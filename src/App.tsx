@@ -7,6 +7,7 @@ import Header from "@/components/Header";
 import NewspaperTexture from "@/components/NewspaperTexture";
 import Index from "./pages/Index";
 import Reviews from "./pages/Reviews";
+import ReviewDetail from "./pages/ReviewDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/reviews" element={<Reviews />} />
+          <Route path="/review/:id" element={<ReviewDetail />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

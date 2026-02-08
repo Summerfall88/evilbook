@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import SocialLinks from "@/components/SocialLinks";
 import ReviewCard from "@/components/ReviewCard";
 import ReviewDialog from "@/components/ReviewDialog";
 import { getReviews, saveReview, deleteReview, Review } from "@/data/reviews";
@@ -46,7 +47,8 @@ const Index = () => {
           <p className="text-base sm:text-lg text-muted-foreground font-body leading-relaxed max-w-lg mx-auto">
             Рецензии на книги, которые не оставляют равнодушными. Тёмные истории, красивые слова, честные мнения.
           </p>
-          <div className="flex justify-center pt-4">
+          <div className="flex flex-col items-center gap-5 pt-4">
+            <SocialLinks />
             <Button
               variant="outline"
               asChild
@@ -82,7 +84,7 @@ const Index = () => {
             <div key={review.id} className="animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>
               <ReviewCard
                 review={review}
-                onClick={isAdmin ? () => openEdit(review) : undefined}
+                onEdit={isAdmin ? () => openEdit(review) : undefined}
               />
             </div>
           ))}
