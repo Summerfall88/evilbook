@@ -1,5 +1,4 @@
 import { Link, useLocation } from "react-router-dom";
-import { BookOpen } from "lucide-react";
 const Header = () => {
   const {
     pathname
@@ -7,7 +6,7 @@ const Header = () => {
   return <header className="border-b border-border/50 bg-background/80 backdrop-blur-sm sticky top-0 z-40">
       <div className="container mx-auto flex items-center justify-between py-4 px-4">
         <Link to="/" className="flex items-center gap-3 group">
-          <BookOpen className="text-gold transition-transform group-hover:rotate-[-8deg] w-[32px] h-[32px]" />
+          
           <div>
             <h1 className="font-display text-xl font-semibold tracking-wide text-foreground leading-none">
               Evilbook
