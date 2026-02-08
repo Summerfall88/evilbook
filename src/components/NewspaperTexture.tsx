@@ -2,7 +2,7 @@ import paperTexture from "@/assets/paper-texture.png";
 
 const NewspaperTexture = () => (
   <div
-    className="pointer-events-none fixed inset-0 z-50 opacity-[0.18]"
+    className="pointer-events-none fixed inset-0 z-50 opacity-[0.35]"
     style={{
       backgroundImage: `url(${paperTexture})`,
       backgroundRepeat: "repeat",

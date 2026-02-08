@@ -80,7 +80,7 @@ const Reviews = () => {
               <div key={review.id} className="animate-fade-in" style={{ animationDelay: `${i * 60}ms` }}>
                 <ReviewCard
                   review={review}
-                  onClick={isAdmin ? () => {
+                  onEdit={isAdmin ? () => {
                     setEditingReview(review);
                     setDialogOpen(true);
                   } : undefined}
