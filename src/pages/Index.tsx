@@ -53,7 +53,7 @@ const Index = () => {
       <section className="container mx-auto px-4 py-16">
         <div className="flex items-end justify-between mb-10">
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-gold mb-2">Свежее</p>
+            <p className="uppercase tracking-[0.3em] mb-2 text-[#ce6355] text-base">Свежее</p>
             <h2 className="font-display text-3xl font-semibold text-foreground">
               Последние рецензии
             </h2>
