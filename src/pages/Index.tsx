@@ -29,7 +29,7 @@ const Index = () => {
       {/* Hero */}
       <section className="relative py-24 px-4 text-center border-b border-border/30">
         <div className="mx-auto max-w-2xl space-y-6">
-          <p className="text-xs uppercase tracking-[0.4em] text-gold font-body">
+          <p className="uppercase tracking-[0.4em] font-body text-[#ce6355] text-base">
             Книжный блог
           </p>
           <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-bold leading-tight text-foreground">
