@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import ReviewCard from "@/components/ReviewCard";
 import ReviewDialog from "@/components/ReviewDialog";
 import { getReviews, saveReview, deleteReview, Review } from "@/data/reviews";
+import { useAdmin } from "@/hooks/useAdmin";
 
 const Index = () => {
   const [reviews, setReviews] = useState(getReviews);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingReview, setEditingReview] = useState<Review | null>(null);
+  const isAdmin = useAdmin();
 
   const latestReviews = [...reviews]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -30,32 +32,21 @@ const Index = () => {
     setDialogOpen(true);
   };
 
-  const openNew = () => {
-    setEditingReview(null);
-    setDialogOpen(true);
-  };
-
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-x-hidden">
       {/* Hero */}
       <section className="relative py-24 px-4 text-center border-b border-border/30">
-        <div className="container mx-auto max-w-2xl space-y-6">
+        <div className="mx-auto max-w-2xl space-y-6">
           <p className="text-xs uppercase tracking-[0.4em] text-gold font-body">
             Книжный блог
           </p>
-          <h1 className="font-display text-5xl md:text-6xl font-bold leading-tight text-foreground">
+          <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-bold leading-tight text-foreground">
             Christina<span className="text-gold">Evilbook</span>
           </h1>
-          <p className="text-lg text-muted-foreground font-body leading-relaxed max-w-lg mx-auto">
+          <p className="text-base sm:text-lg text-muted-foreground font-body leading-relaxed max-w-lg mx-auto">
             Рецензии на книги, которые не оставляют равнодушными. Тёмные истории, красивые слова, честные мнения.
           </p>
-          <div className="flex justify-center gap-3 pt-4">
-            <Button
-              onClick={openNew}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
-            >
-              <Plus size={16} /> Новая рецензия
-            </Button>
+          <div className="flex justify-center pt-4">
             <Button
               variant="outline"
               asChild
@@ -89,19 +80,24 @@ const Index = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {latestReviews.map((review, i) => (
             <div key={review.id} className="animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>
-              <ReviewCard review={review} onClick={() => openEdit(review)} />
+              <ReviewCard
+                review={review}
+                onClick={isAdmin ? () => openEdit(review) : undefined}
+              />
             </div>
           ))}
         </div>
       </section>
 
-      <ReviewDialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        review={editingReview}
-        onSave={handleSave}
-        onDelete={handleDelete}
-      />
+      {isAdmin && (
+        <ReviewDialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          review={editingReview}
+          onSave={handleSave}
+          onDelete={handleDelete}
+        />
+      )}
     </div>
   );
 };
