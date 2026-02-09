@@ -57,6 +57,11 @@ const ReviewDetail = () => {
                 <p className="text-lg text-muted-foreground mt-2">{review.author}</p>
               </div>
               <StarRating rating={review.rating} size={22} />
+              {review.quote && (
+                <blockquote className="border-l-2 border-gold pl-4 italic text-muted-foreground text-sm leading-relaxed">
+                  «{review.quote}»
+                </blockquote>
+              )}
               <p className="text-sm text-muted-foreground/60">{formattedDate}</p>
             </div>
           </div>

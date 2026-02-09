@@ -22,6 +22,7 @@ const ReviewDialog = ({ open, onClose, review, onSave, onDelete }: ReviewDialogP
   const [rating, setRating] = useState(3);
   const [date, setDate] = useState("");
   const [text, setText] = useState("");
+  const [quote, setQuote] = useState("");
 
   useEffect(() => {
     if (review) {
@@ -31,6 +32,7 @@ const ReviewDialog = ({ open, onClose, review, onSave, onDelete }: ReviewDialogP
       setRating(review.rating);
       setDate(review.date);
       setText(review.text);
+      setQuote(review.quote || "");
     } else {
       setTitle("");
       setAuthor("");
@@ -38,6 +40,7 @@ const ReviewDialog = ({ open, onClose, review, onSave, onDelete }: ReviewDialogP
       setRating(3);
       setDate(new Date().toISOString().slice(0, 10));
       setText("");
+      setQuote("");
     }
   }, [review, open]);
 
@@ -51,6 +54,7 @@ const ReviewDialog = ({ open, onClose, review, onSave, onDelete }: ReviewDialogP
       rating,
       date,
       text,
+      quote: quote || undefined,
     });
     onClose();
   };
@@ -102,6 +106,15 @@ const ReviewDialog = ({ open, onClose, review, onSave, onDelete }: ReviewDialogP
               value={date}
               onChange={(e) => setDate(e.target.value)}
               required
+              className="bg-secondary border-border text-foreground"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-muted-foreground">Цитата из книги</Label>
+            <Input
+              value={quote}
+              onChange={(e) => setQuote(e.target.value)}
+              placeholder="Необязательно"
               className="bg-secondary border-border text-foreground"
             />
           </div>

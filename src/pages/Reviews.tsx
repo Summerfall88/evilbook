@@ -30,7 +30,6 @@ const Reviews = () => {
       <section className="container mx-auto px-4 py-12">
         <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-10">
           <div>
-            <p className="uppercase tracking-[0.3em] mb-2 text-[#ce6355] text-sm">Коллекция</p>
             <h1 className="font-display text-4xl font-bold text-foreground">
               Все рецензии
             </h1>
@@ -46,7 +45,7 @@ const Reviews = () => {
         {/* Search */}
         <div className="relative max-w-md mb-10">
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Поиск по названию или автору..." className="pl-10 bg-secondary border-border text-foreground placeholder:text-muted-foreground/50" />
+          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Поиск по названию или автору..." className="pl-10 bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50" />
         </div>
 
         {filtered.length === 0 ? <p className="text-center text-muted-foreground py-20 font-body">
