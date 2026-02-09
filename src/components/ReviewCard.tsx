@@ -24,10 +24,10 @@ const ReviewCard = ({
           </div>
         </div>
         <div className="p-4 space-y-2">
-          <h3 className="font-display text-base font-semibold leading-tight line-clamp-2 text-foreground group-hover:text-gold transition-colors">
+          <h3 className="font-display text-lg font-semibold leading-tight line-clamp-2 text-foreground group-hover:text-gold transition-colors">
             {review.title}
           </h3>
-          <p className="text-sm text-muted-foreground">{review.author}</p>
+          <p className="text-base text-muted-foreground">{review.author}</p>
           <p className="text-xs text-muted-foreground/60">{formattedDate}</p>
           <p className="text-secondary-foreground line-clamp-3 leading-relaxed text-base">
             {review.text}

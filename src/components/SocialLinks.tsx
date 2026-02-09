@@ -57,7 +57,7 @@ const SocialLinks = () => (
         target="_blank"
         rel="noopener noreferrer"
         aria-label={s.name}
-        className="text-muted-foreground hover:text-gold transition-colors duration-200"
+        className="text-muted-foreground hover:text-gold transition-colors duration-200 hover:scale-110"
       >
         {s.icon}
       </a>

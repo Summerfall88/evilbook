@@ -7,6 +7,8 @@ import ReviewCard from "@/components/ReviewCard";
 import ReviewDialog from "@/components/ReviewDialog";
 import { getReviews, saveReview, deleteReview, Review } from "@/data/reviews";
 import { useAdmin } from "@/hooks/useAdmin";
+import heroPortrait from "@/assets/hero-portrait.png";
+
 const Index = () => {
   const [reviews, setReviews] = useState(getReviews);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -27,8 +29,17 @@ const Index = () => {
   };
   return <div className="min-h-screen overflow-x-hidden">
       {/* Hero */}
-      <section className="relative py-24 px-4 text-center border-b border-border/30">
-        <div className="mx-auto max-w-2xl space-y-6">
+      <section className="relative py-24 px-4 border-b border-border/30 overflow-hidden">
+        {/* Background portrait */}
+        <div className="absolute right-0 top-0 bottom-0 w-1/2 pointer-events-none hidden md:block">
+          <img
+            src={heroPortrait}
+            alt=""
+            className="absolute right-0 top-1/2 -translate-y-1/2 h-[110%] w-auto object-contain opacity-20 translate-x-[10%]"
+          />
+        </div>
+
+        <div className="mx-auto max-w-2xl space-y-6 text-center relative z-10">
           <p className="uppercase tracking-[0.4em] font-body text-[#ce6355] text-base">
             Книжный блог
           </p>
@@ -53,7 +64,6 @@ const Index = () => {
       <section className="container mx-auto px-4 py-16">
         <div className="flex items-end justify-between mb-10">
           <div>
-            
             <h2 className="font-display text-3xl font-semibold text-foreground">
               Последние рецензии
             </h2>

@@ -21,7 +21,7 @@ const Header = () => {
           <Link to="/" className={`uppercase tracking-widest transition-colors hover:text-gold ${pathname === "/" ? "text-gold" : "text-muted-foreground"}`}>
             Главная
           </Link>
-          <Link to="/reviews" className={`uppercase tracking-widest transition-colors hover:text-gold ${pathname === "/reviews" ? "text-gold" : "text-muted-foreground"}`}>
+          <Link to="/reviews" className={`uppercase tracking-widest transition-colors hover:text-gold ${pathname === "/reviews" || pathname.startsWith("/review/") ? "text-gold" : "text-muted-foreground"}`}>
             Все рецензии
           </Link>
         </nav>
