@@ -31,11 +31,11 @@ const Index = () => {
       {/* Hero */}
       <section className="relative py-24 px-4 border-b border-border/30 overflow-hidden">
         {/* Background portrait */}
-        <div className="absolute right-0 top-0 bottom-0 w-1/2 pointer-events-none hidden md:block">
+        <div className="absolute right-0 top-0 bottom-0 w-3/4 sm:w-2/3 md:w-1/2 pointer-events-none overflow-hidden">
           <img
             src={heroPortrait}
             alt=""
-            className="absolute right-0 top-1/2 -translate-y-1/2 h-[110%] w-auto object-contain opacity-20 translate-x-[10%]"
+            className="absolute right-0 top-1/2 -translate-y-1/2 h-[90%] sm:h-[100%] md:h-[110%] w-auto object-contain opacity-0 animate-slide-in-fade md:animate-slide-in-fade"
           />
         </div>
 
