@@ -1,10 +1,15 @@
+import { useState, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, MessageCircle } from "lucide-react";
 import { getReviews } from "@/data/reviews";
 import StarRating from "@/components/StarRating";
+import CommentsSection from "@/components/CommentsSection";
+import { Button } from "@/components/ui/button";
 
 const ReviewDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const [showComments, setShowComments] = useState(false);
+  const commentsRef = useRef<HTMLDivElement>(null);
   const reviews = getReviews();
   const review = reviews.find((r) => r.id === id);
 
@@ -71,6 +76,27 @@ const ReviewDetail = () => {
               {review.text}
             </p>
           </div>
+
+          <div className="flex justify-center pt-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setShowComments(true);
+                setTimeout(() => commentsRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+              }}
+              className="gap-2"
+            >
+              <MessageCircle size={16} />
+              Перейти к комментариям
+            </Button>
+          </div>
+
+          {showComments && (
+            <div ref={commentsRef} className="border-t border-border/30 pt-8">
+              <CommentsSection reviewId={id!} />
+            </div>
+          )}
         </article>
       </section>
     </div>
