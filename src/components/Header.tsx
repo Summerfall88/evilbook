@@ -34,7 +34,7 @@ const Header = () => {
           </div>
         </Link>
 
-        <Button variant="ghost" size="icon" onClick={() => setMenuOpen(true)} className="text-foreground">
+        <Button variant="ghost" size="icon" onClick={() => setMenuOpen(true)} className="text-foreground hover:bg-primary/10 hover:text-primary">
           <Menu size={24} />
         </Button>
       </div>
