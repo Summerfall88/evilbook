@@ -35,7 +35,7 @@ const Index = () => {
         </div>
 
         <div className="mx-auto max-w-2xl space-y-6 text-center relative z-10">
-          <p className="uppercase tracking-[0.4em] font-body text-[#ce6355] text-base">
+          <p className="uppercase tracking-[0.4em] font-body text-[#ce6355] text-sm">
             Книжный блог
           </p>
           <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-bold leading-tight text-foreground">
