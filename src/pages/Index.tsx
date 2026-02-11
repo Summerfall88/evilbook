@@ -69,7 +69,7 @@ const Index = () => {
             </h2>
           </div>
           <Link to="/reviews" className="text-muted-foreground hover:text-gold transition-colors flex items-center gap-1 text-base text-justify">
-            Смотреть <ArrowRight size={14} />
+            Смотреть все <ArrowRight size={14} />
           </Link>
         </div>
 

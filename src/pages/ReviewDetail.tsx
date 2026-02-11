@@ -85,7 +85,7 @@ const ReviewDetail = () => {
                 setShowComments(true);
                 setTimeout(() => commentsRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
               }}
-              className="gap-2 hover:border-primary hover:text-primary"
+              className="gap-2"
             >
               <MessageCircle size={16} />
               Перейти к комментариям
