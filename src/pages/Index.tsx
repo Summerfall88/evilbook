@@ -35,7 +35,7 @@ const Index = () => {
           <img
             src={heroPortrait}
             alt=""
-            className="absolute right-0 top-1/2 -translate-y-1/2 h-[90%] sm:h-[100%] md:h-[110%] w-auto object-contain opacity-0 animate-slide-in-fade md:animate-slide-in-fade"
+            className="absolute right-0 top-0 h-full w-auto object-contain object-top opacity-0 animate-slide-in-fade"
           />
         </div>
 
