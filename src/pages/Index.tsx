@@ -8,6 +8,7 @@ import ReviewDialog from "@/components/ReviewDialog";
 import { getReviews, saveReview, deleteReview, Review } from "@/data/reviews";
 import { useAdmin } from "@/hooks/useAdmin";
 import heroPortrait from "@/assets/hero-portrait.png";
+
 const Index = () => {
   const [reviews, setReviews] = useState(getReviews);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -31,7 +32,11 @@ const Index = () => {
       <section className="relative py-24 px-4 border-b border-border/30 overflow-hidden">
         {/* Background portrait */}
         <div className="absolute right-0 top-0 bottom-0 w-3/4 sm:w-2/3 md:w-1/2 pointer-events-none overflow-hidden">
-          <img src={heroPortrait} alt="" className="absolute right-0 top-1/2 -translate-y-1/2 h-[90%] sm:h-[100%] md:h-[110%] w-auto object-contain opacity-0 animate-slide-in-fade md:animate-slide-in-fade" />
+          <img
+            src={heroPortrait}
+            alt=""
+            className="absolute right-0 top-0 h-full w-auto object-contain object-top opacity-0 animate-slide-in-fade"
+          />
         </div>
 
         <div className="mx-auto max-w-2xl space-y-6 text-center relative z-10">
@@ -64,7 +69,7 @@ const Index = () => {
             </h2>
           </div>
           <Link to="/reviews" className="text-muted-foreground hover:text-gold transition-colors flex items-center gap-1 text-base text-justify">
-            Смотреть  <ArrowRight size={14} />
+            Смотреть все <ArrowRight size={14} />
           </Link>
         </div>
 
