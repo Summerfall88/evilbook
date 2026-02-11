@@ -19,42 +19,59 @@ interface CommentsSectionProps {
 }
 
 const CommentsSection = ({ reviewId }: CommentsSectionProps) => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
   const [comments, setComments] = useState<Comment[]>([]);
   const [content, setContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
 
   const fetchComments = async () => {
-    const { data } = await supabase
-      .from("comments")
-      .select("id, content, created_at, user_id")
-      .eq("review_id", reviewId)
-      .order("created_at", { ascending: true });
+    try {
+      const { data, error } = await supabase
+        .from("comments")
+        .select("id, content, created_at, user_id")
+        .eq("review_id", reviewId)
+        .order("created_at", { ascending: true });
 
-    if (data && data.length > 0) {
-      const userIds = [...new Set(data.map((c) => c.user_id))];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, display_name")
-        .in("id", userIds);
+      if (error) {
+        console.error("Error fetching comments:", error);
+        toast.error("Ошибка загрузки комментариев");
+        return;
+      }
 
-      const profileMap = new Map(profiles?.map((p) => [p.id, p.display_name]) ?? []);
+      if (data && data.length > 0) {
+        const userIds = [...new Set(data.map((c) => c.user_id))];
+        const { data: profiles, error: profileError } = await supabase
+          .from("profiles")
+          .select("id, display_name")
+          .in("id", userIds);
 
-      setComments(
-        data.map((c) => ({
-          ...c,
-          profile: { display_name: profileMap.get(c.user_id) ?? "Пользователь" },
-        }))
-      );
-    } else {
-      setComments([]);
+        if (profileError) {
+          console.error("Error fetching profiles:", profileError);
+        }
+
+        const profileMap = new Map(profiles?.map((p) => [p.id, p.display_name]) ?? []);
+
+        setComments(
+          data.map((c) => ({
+            ...c,
+            profile: { display_name: profileMap.get(c.user_id) ?? "Пользователь" },
+          }))
+        );
+      } else {
+        setComments([]);
+      }
+    } catch (err) {
+      console.error("Unexpected error in fetchComments:", err);
     }
   };
 
   useEffect(() => {
-    fetchComments();
-  }, [reviewId]);
+    if (!loading) {
+      fetchComments();
+    }
+  }, [reviewId, loading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

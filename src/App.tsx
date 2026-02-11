@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
 import Header from "@/components/Header";
 import NewspaperTexture from "@/components/NewspaperTexture";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -19,15 +20,17 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <ScrollToTop />
-        <NewspaperTexture />
-        <Header />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/reviews" element={<Reviews />} />
-          <Route path="/review/:id" element={<ReviewDetail />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <ScrollToTop />
+          <NewspaperTexture />
+          <Header />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/reviews" element={<Reviews />} />
+            <Route path="/review/:id" element={<ReviewDetail />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

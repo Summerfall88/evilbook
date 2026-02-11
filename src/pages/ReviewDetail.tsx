@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, MessageCircle } from "lucide-react";
 import { getReviews } from "@/data/reviews";
@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 
 const ReviewDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const [showComments, setShowComments] = useState(false);
   const commentsRef = useRef<HTMLDivElement>(null);
   const reviews = getReviews();
   const review = reviews.find((r) => r.id === id);
@@ -82,8 +81,7 @@ const ReviewDetail = () => {
               variant="outline"
               size="sm"
               onClick={() => {
-                setShowComments(true);
-                setTimeout(() => commentsRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+                commentsRef.current?.scrollIntoView({ behavior: "smooth" });
               }}
               className="gap-2"
             >
@@ -92,11 +90,9 @@ const ReviewDetail = () => {
             </Button>
           </div>
 
-          {showComments && (
-            <div ref={commentsRef} className="border-t border-border/30 pt-8">
-              <CommentsSection reviewId={id!} />
-            </div>
-          )}
+          <div ref={commentsRef} className="border-t border-border/30 pt-8">
+            <CommentsSection reviewId={id!} />
+          </div>
         </article>
       </section>
     </div>
