@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, MessageCircle } from "lucide-react";
 import { getReviews } from "@/data/reviews";
@@ -11,6 +11,13 @@ const ReviewDetail = () => {
   const commentsRef = useRef<HTMLDivElement>(null);
   const reviews = getReviews();
   const review = reviews.find((r) => r.id === id);
+  const [showComments, setShowComments] = useState(false);
+
+  useEffect(() => {
+    if (showComments && commentsRef.current) {
+      commentsRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [showComments]);
 
   if (!review) {
     return (
@@ -81,7 +88,11 @@ const ReviewDetail = () => {
               variant="outline"
               size="sm"
               onClick={() => {
-                commentsRef.current?.scrollIntoView({ behavior: "smooth" });
+                if (!showComments) {
+                  setShowComments(true);
+                } else {
+                  commentsRef.current?.scrollIntoView({ behavior: "smooth" });
+                }
               }}
               className="gap-2"
             >
@@ -90,9 +101,11 @@ const ReviewDetail = () => {
             </Button>
           </div>
 
-          <div ref={commentsRef} className="border-t border-border/30 pt-8">
-            <CommentsSection reviewId={id!} />
-          </div>
+          {showComments && (
+            <div ref={commentsRef} className="border-t border-border/30 pt-8 animate-fade-in">
+              <CommentsSection reviewId={id!} />
+            </div>
+          )}
         </article>
       </section>
     </div>
