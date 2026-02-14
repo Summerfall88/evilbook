@@ -57,15 +57,10 @@ const Index = () => {
 
     {/* Latest Reviews */}
     <section className="container mx-auto px-4 py-16">
-      <div className="flex items-end justify-between mb-10">
-        <div>
-          <h2 className="font-display text-3xl font-bold text-foreground">
-            Последние рецензии
-          </h2>
-        </div>
-        <Link to="/reviews" className="text-muted-foreground hover:text-gold transition-colors flex items-center gap-1 text-base text-justify">
-          Смотреть  <ArrowRight size={14} />
-        </Link>
+      <div className="text-center mb-10">
+        <h2 className="font-display text-3xl font-bold text-foreground">
+          Последние рецензии
+        </h2>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
