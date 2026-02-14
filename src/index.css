@@ -6,32 +6,32 @@
 
 @layer base {
   :root {
-    --background: 45 2% 96%;
-    --foreground: 24 9% 10%;
+    --background: 210 2% 99%;
+    --foreground: 220 15% 10%;
 
-    --card: 60 9% 97%;
-    --card-foreground: 24 9% 10%;
+    --card: 210 2% 99%;
+    --card-foreground: 220 15% 10%;
 
-    --popover: 20 5% 90%;
-    --popover-foreground: 24 9% 10%;
+    --popover: 210 2% 99%;
+    --popover-foreground: 220 15% 10%;
 
     --primary: 6 57% 57%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 24 5% 44%;
-    --secondary-foreground: 0 0% 13%;
+    --secondary: 210 10% 45%;
+    --secondary-foreground: 220 15% 13%;
 
-    --muted: 23 5% 82%;
-    --muted-foreground: 24 9% 10%;
+    --muted: 210 2% 96%;
+    --muted-foreground: 220 10% 45%;
 
-    --accent: 6 30% 95%;
+    --accent: 210 10% 96%;
     --accent-foreground: 6 57% 57%;
 
     --destructive: 0 72% 50%;
     --destructive-foreground: 0 85% 97%;
 
-    --border: 23 5% 82%;
-    --input: 23 5% 82%;
+    --border: 210 15% 90%;
+    --input: 210 15% 90%;
     --ring: 6 65% 57%;
 
     --radius: 1rem;
@@ -58,7 +58,7 @@
     --chart-3: 6 65% 57%;
     --chart-4: 6 65% 50%;
     --chart-5: 24 5% 44%;
-    --sidebar: 60 9% 97%;
+    --sidebar: 210 10% 98%;
     --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
     --font-serif: 'Playfair Display', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
     --font-mono: 'ui-monospace', SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;

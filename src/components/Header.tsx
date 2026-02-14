@@ -25,7 +25,7 @@ const Header = () => {
       <div className="container mx-auto flex items-center justify-between py-4 px-4">
         <Link to="/" className="flex items-center gap-3 group">
           <div className="w-10 h-10 rounded-lg bg-card border border-border/50 flex items-center justify-center overflow-hidden group-hover:border-[#ce6355]/50 transition-colors duration-300">
-            <img src="favicon.png" alt="Evilbook Logo" className="w-7 h-7 object-contain" />
+            <img src="/evilbook/favicon.png?v=1" alt="Logo" className="w-7 h-7 object-contain" />
           </div>
           <div>
             <h1 className="font-evilbook text-xl font-semibold tracking-wide text-foreground leading-none">
