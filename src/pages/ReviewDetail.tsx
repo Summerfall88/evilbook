@@ -101,11 +101,11 @@ const ReviewDetail = () => {
             </Button>
           </div>
 
-          {showComments && (
-            <div ref={commentsRef} className="border-t border-border/30 pt-8 animate-fade-in">
+          <div className={`${!showComments ? "hidden" : ""} border-t border-border/30 pt-8 animate-fade-in`}>
+            <div ref={commentsRef}>
               <CommentsSection reviewId={id!} />
             </div>
-          )}
+          </div>
         </article>
       </section>
     </div>

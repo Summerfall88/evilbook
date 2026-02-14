@@ -2,15 +2,17 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
 import AuthDialog from "@/components/AuthDialog";
-import { toast } from "sonner";
+import { CommentInput } from "./comments/CommentInput";
+import { CommentItem } from "./comments/CommentItem";
+import { Loader2 } from "lucide-react";
 
 interface Comment {
   id: string;
   content: string;
   created_at: string;
   user_id: string;
+  parent_id: string | null;
   profile?: { display_name: string | null };
 }
 
@@ -18,144 +20,125 @@ interface CommentsSectionProps {
   reviewId: string;
 }
 
+const PAGE_SIZE = 10;
+
 const CommentsSection = ({ reviewId }: CommentsSectionProps) => {
   const { user, loading } = useAuth();
-
   const [comments, setComments] = useState<Comment[]>([]);
-  const [content, setContent] = useState("");
-  const [submitting, setSubmitting] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
+  const [fetching, setFetching] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(0);
 
-  const fetchComments = async () => {
+  const fetchRootComments = async (pageIndex: number, isRefresh = false) => {
+    if (fetching) return;
+    setFetching(true);
+
+    const from = pageIndex * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+
     try {
-      const { data, error } = await supabase
+      // 1. Fetch comments first (removed the failing join)
+      const { data: commentsData, error: commentsError } = await supabase
         .from("comments")
-        .select("id, content, created_at, user_id")
+        .select("*")
         .eq("review_id", reviewId)
-        .order("created_at", { ascending: true });
+        .is("parent_id", null)
+        .order("created_at", { ascending: false })
+        .range(from, to);
 
-      if (error) {
-        console.error("Error fetching comments:", error);
-        toast.error("Ошибка загрузки комментариев");
+      if (commentsError) {
+        console.error("Error fetching comments:", commentsError);
         return;
       }
 
-      if (data && data.length > 0) {
-        const userIds = [...new Set(data.map((c) => c.user_id))];
-        const { data: profiles, error: profileError } = await supabase
+      // 2. Fetch profiles for these comments manually
+      const userIds = [...new Set(commentsData.map(c => c.user_id))];
+      let profilesMap: Record<string, { display_name: string | null }> = {};
+
+      if (userIds.length > 0) {
+        const { data: profilesData, error: profilesError } = await supabase
           .from("profiles")
           .select("id, display_name")
           .in("id", userIds);
 
-        if (profileError) {
-          console.error("Error fetching profiles:", profileError);
+        if (profilesError) {
+          console.error("Error fetching profiles:", profilesError);
+        } else if (profilesData) {
+          profilesMap = profilesData.reduce((acc, p) => ({ ...acc, [p.id]: { display_name: p.display_name } }), {});
         }
+      }
 
-        const profileMap = new Map(profiles?.map((p) => [p.id, p.display_name]) ?? []);
+      // 3. Merge profiles with comments
+      const loadedComments: Comment[] = commentsData.map(d => ({
+        ...d,
+        profile: profilesMap[d.user_id] || { display_name: "Пользователь" },
+      }));
 
-        setComments(
-          data.map((c) => ({
-            ...c,
-            profile: { display_name: profileMap.get(c.user_id) ?? "Пользователь" },
-          }))
-        );
+      if (isRefresh) {
+        setComments(loadedComments);
       } else {
-        setComments([]);
+        setComments(prev => [...prev, ...loadedComments]);
+      }
+
+      if (commentsData.length < PAGE_SIZE) {
+        setHasMore(false);
+      } else {
+        setHasMore(true);
       }
     } catch (err) {
-      console.error("Unexpected error in fetchComments:", err);
+      console.error(err);
+    } finally {
+      setFetching(false);
     }
   };
 
   useEffect(() => {
     if (!loading) {
-      fetchComments();
+      setPage(0);
+      setHasMore(true);
+      fetchRootComments(0, true);
     }
   }, [reviewId, loading]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user || !content.trim()) return;
-    setSubmitting(true);
-
-    const { error } = await supabase.from("comments").insert({
-      review_id: reviewId,
-      user_id: user.id,
-      content: content.trim(),
-    });
-
-    if (error) {
-      toast.error("Не удалось отправить комментарий");
-    } else {
-      setContent("");
-      await fetchComments();
-    }
-    setSubmitting(false);
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchRootComments(nextPage);
   };
 
-  const handleDelete = async (commentId: string) => {
-    const { error } = await supabase.from("comments").delete().eq("id", commentId);
-    if (!error) {
-      setComments((prev) => prev.filter((c) => c.id !== commentId));
-    }
+  const handleNewRootComment = () => {
+    // Ideally refetch specific valid page or just reset
+    // Resetting is simplest to see your new comment at top
+    setPage(0);
+    setHasMore(true);
+    fetchRootComments(0, true);
+  };
+
+  const handleDeleteRoot = (id: string) => {
+    // Optimistic delete from list
+    setComments(prev => prev.filter(c => c.id !== id));
+    // Also call API
+    supabase.from("comments").delete().eq("id", id).then();
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20">
       <h3 className="font-display text-xl font-bold text-foreground">
-        Комментарии ({comments.length})
+        Комментарии
       </h3>
 
-      {comments.length === 0 && (
-        <p className="text-sm text-muted-foreground">Пока нет комментариев. Будьте первым!</p>
-      )}
-
-      <div className="space-y-4">
-        {comments.map((c) => (
-          <div key={c.id} className="border border-border/50 rounded-lg p-4 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-foreground">
-                {c.profile?.display_name ?? "Пользователь"}
-              </span>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">
-                  {new Date(c.created_at).toLocaleDateString("ru-RU", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}
-                </span>
-                {user?.id === c.user_id && (
-                  <button
-                    onClick={() => handleDelete(c.id)}
-                    className="text-muted-foreground hover:text-destructive transition-colors"
-                    title="Удалить"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                )}
-              </div>
-            </div>
-            <p className="text-sm text-secondary-foreground">{c.content}</p>
-          </div>
-        ))}
-      </div>
-
+      {/* Main Input */}
       {user ? (
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Напишите комментарий..."
-            className="w-full min-h-[80px] rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
-            required
+        <div className="bg-card border border-border/50 rounded-lg p-4 mb-6">
+          <CommentInput
+            reviewId={reviewId}
+            userId={user.id}
+            onCommentPosted={handleNewRootComment}
           />
-          <Button type="submit" size="sm" disabled={submitting || !content.trim()}>
-            {submitting ? "Отправка..." : "Отправить"}
-          </Button>
-        </form>
+        </div>
       ) : (
-        <div className="text-center py-4 border border-border/50 rounded-lg">
+        <div className="text-center py-4 border border-border/50 rounded-lg mb-6">
           <p className="text-sm text-muted-foreground mb-2">
             Войдите, чтобы оставить комментарий
           </p>
@@ -170,6 +153,43 @@ const CommentsSection = ({ reviewId }: CommentsSectionProps) => {
           />
         </div>
       )}
+
+      {/* Comment List */}
+      <div className="space-y-6">
+        {comments.map((comment) => (
+          <CommentItem
+            key={comment.id}
+            comment={comment}
+            userId={user?.id}
+            onDelete={handleDeleteRoot}
+            reviewId={reviewId}
+            onCommentPosted={() => {
+              // Usually we don't need to refresh roots if a reply was posted
+              // But maybe update count? For now lazy reply loading handles it
+            }}
+          />
+        ))}
+
+        {comments.length === 0 && !fetching && (
+          <p className="text-center text-sm text-muted-foreground py-4">
+            Здесь пока тихо... Напишите первое мнение!
+          </p>
+        )}
+
+        {fetching && (
+          <div className="flex justify-center py-4">
+            <Loader2 className="animate-spin text-muted-foreground" size={24} />
+          </div>
+        )}
+
+        {!fetching && hasMore && comments.length > 0 && (
+          <div className="flex justify-center pt-2">
+            <Button variant="ghost" onClick={handleLoadMore}>
+              Загрузить ещё комментарии
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
