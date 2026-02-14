@@ -5,6 +5,7 @@ import { getReviews } from "@/data/reviews";
 import StarRating from "@/components/StarRating";
 import CommentsSection from "@/components/CommentsSection";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
 const ReviewDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -12,6 +13,22 @@ const ReviewDetail = () => {
   const reviews = getReviews();
   const review = reviews.find((r) => r.id === id);
   const [showComments, setShowComments] = useState(false);
+  const [commentCount, setCommentCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchCommentCount = async () => {
+      if (!id) return;
+      const { count, error } = await supabase
+        .from("comments")
+        .select("*", { count: "exact", head: true })
+        .eq("review_id", id);
+
+      if (!error && count !== null) {
+        setCommentCount(count);
+      }
+    };
+    fetchCommentCount();
+  }, [id]);
 
   useEffect(() => {
     if (showComments && commentsRef.current) {
@@ -97,7 +114,7 @@ const ReviewDetail = () => {
               className="gap-2"
             >
               <MessageCircle size={16} />
-              Перейти к комментариям
+              Перейти к комментариям {commentCount !== null ? `(${commentCount})` : ""}
             </Button>
           </div>
 
@@ -111,5 +128,6 @@ const ReviewDetail = () => {
     </div>
   );
 };
+
 
 export default ReviewDetail;
