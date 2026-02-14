@@ -25,7 +25,7 @@ const Header = () => {
       <div className="container mx-auto flex items-center justify-between py-4 px-4">
         <Link to="/" className="flex items-center gap-3 group">
           <div>
-            <h1 className="font-display text-xl font-semibold tracking-wide text-foreground leading-none">
+            <h1 className="font-evilbook text-xl font-semibold tracking-wide text-foreground leading-none">
               Evilbook
             </h1>
             <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
@@ -43,7 +43,7 @@ const Header = () => {
       <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
         <SheetContent side="right" className="w-72">
           <SheetHeader>
-            <SheetTitle className="font-display">Меню</SheetTitle>
+            <SheetTitle className="font-display font-bold">Меню</SheetTitle>
             <SheetDescription className="sr-only">Навигация по сайту</SheetDescription>
           </SheetHeader>
           <nav className="flex flex-col gap-4 mt-6 font-body text-base">

@@ -102,7 +102,7 @@ const CommentsSection = ({ reviewId }: CommentsSectionProps) => {
 
   return (
     <div className="space-y-6">
-      <h3 className="font-display text-xl font-semibold text-foreground">
+      <h3 className="font-display text-xl font-bold text-foreground">
         Комментарии ({comments.length})
       </h3>
 

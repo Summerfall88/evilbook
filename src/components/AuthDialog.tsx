@@ -56,7 +56,7 @@ const AuthDialog = ({ trigger, open, onOpenChange }: AuthDialogProps) => {
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-display">
+          <DialogTitle className="font-display font-bold">
             {mode === "login" ? "Вход" : "Регистрация"}
           </DialogTitle>
           <DialogDescription>

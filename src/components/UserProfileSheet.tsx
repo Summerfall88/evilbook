@@ -76,7 +76,7 @@ const UserProfileSheet = ({ open, onOpenChange }: UserProfileSheetProps) => {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-80 sm:w-96">
         <SheetHeader>
-          <SheetTitle className="font-display">Личный кабинет</SheetTitle>
+          <SheetTitle className="font-display font-bold">Личный кабинет</SheetTitle>
           <SheetDescription>Управление аккаунтом</SheetDescription>
         </SheetHeader>
 

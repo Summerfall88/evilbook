@@ -63,7 +63,7 @@ const ReviewDialog = ({ open, onClose, review, onSave, onDelete }: ReviewDialogP
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="bg-card border-border max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl text-foreground">
+          <DialogTitle className="font-display font-bold text-xl text-foreground">
             {review ? "Редактировать рецензию" : "Новая рецензия"}
           </DialogTitle>
         </DialogHeader>
