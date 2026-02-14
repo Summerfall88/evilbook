@@ -26,43 +26,43 @@ const Reviews = () => {
     deleteReview(id);
     setReviews(getReviews());
   };
-  return <div className="min-h-screen overflow-x-hidden">
-      <section className="container mx-auto px-4 py-12">
-        <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-10">
-          <div>
-            <h1 className="font-display text-4xl font-bold text-foreground">
-              Все рецензии
-            </h1>
-          </div>
-          {isAdmin && <Button onClick={() => {
+  return <div className="min-h-[100dvh]">
+    <section className="container mx-auto px-4 py-12">
+      <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-10">
+        <div>
+          <h1 className="font-display text-4xl font-bold text-foreground">
+            Все рецензии
+          </h1>
+        </div>
+        {isAdmin && <Button onClick={() => {
           setEditingReview(null);
           setDialogOpen(true);
         }} className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2">
-              <Plus size={16} /> Новая рецензия
-            </Button>}
-        </div>
+          <Plus size={16} /> Новая рецензия
+        </Button>}
+      </div>
 
-        {/* Search */}
-        <div className="relative max-w-md mb-10">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Поиск по названию или автору..." className="pl-10 bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50" />
-        </div>
+      {/* Search */}
+      <div className="relative max-w-md mb-10">
+        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Поиск по названию или автору..." className="pl-10 bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50" />
+      </div>
 
-        {filtered.length === 0 ? <p className="text-center text-muted-foreground py-20 font-body">
-            Ничего не найдено
-          </p> : <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filtered.map((review, i) => <div key={review.id} className="animate-fade-in" style={{
+      {filtered.length === 0 ? <p className="text-center text-muted-foreground py-20 font-body">
+        Ничего не найдено
+      </p> : <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {filtered.map((review, i) => <div key={review.id} className="animate-fade-in" style={{
           animationDelay: `${i * 60}ms`
         }}>
-                <ReviewCard review={review} onEdit={isAdmin ? () => {
+          <ReviewCard review={review} onEdit={isAdmin ? () => {
             setEditingReview(review);
             setDialogOpen(true);
           } : undefined} />
-              </div>)}
-          </div>}
-      </section>
+        </div>)}
+      </div>}
+    </section>
 
-      {isAdmin && <ReviewDialog open={dialogOpen} onClose={() => setDialogOpen(false)} review={editingReview} onSave={handleSave} onDelete={handleDelete} />}
-    </div>;
+    {isAdmin && <ReviewDialog open={dialogOpen} onClose={() => setDialogOpen(false)} review={editingReview} onSave={handleSave} onDelete={handleDelete} />}
+  </div>;
 };
 export default Reviews;

@@ -124,9 +124,17 @@
     @apply border-border;
   }
 
+  html,
+  body {
+    overflow-x: hidden;
+    height: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body);
+    min-height: 100%;
   }
 
   h1,

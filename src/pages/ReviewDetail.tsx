@@ -39,7 +39,7 @@ const ReviewDetail = () => {
   });
 
   return (
-    <div className="min-h-screen overflow-x-hidden">
+    <div className="min-h-[100dvh]">
       <section className="container mx-auto px-4 py-8 max-w-3xl">
         <Link
           to="/reviews"
