@@ -1,107 +1,91 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
 const DebugMonitor = () => {
+    const { pathname } = useLocation();
     const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
     const [scrollY, setScrollY] = useState(window.scrollY);
-    const [layoutShifts, setLayoutShifts] = useState<{ sources: string[]; value: number }[]>([]);
+    const [isTouching, setIsTouching] = useState(false);
+    const [events, setEvents] = useState<{ msg: string; time: string }[]>([]);
+    const [lastJump, setLastJump] = useState<string | null>(null);
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
         setIsVisible(true);
 
-        const handleResize = () => {
-            setViewportHeight(window.innerHeight);
+        const handleResize = () => setViewportHeight(window.innerHeight);
+        const handleScroll = () => {
+            const currentY = window.scrollY;
+            setScrollY(currentY);
         };
 
-        const handleScroll = () => {
-            setScrollY(window.scrollY);
-        };
+        const handleTouchStart = () => setIsTouching(true);
+        const handleTouchEnd = () => setIsTouching(false);
 
         window.addEventListener("resize", handleResize);
         window.addEventListener("scroll", handleScroll);
-
-        try {
-            const observer = new PerformanceObserver((list) => {
-                for (const entry of list.getEntries()) {
-                    if (entry.entryType === "layout-shift") {
-                        const shift = entry as any;
-                        if (shift.hadRecentInput) return;
-
-                        const sources: string[] = [];
-                        if (shift.sources) {
-                            shift.sources.forEach((s: any) => {
-                                if (s.node) {
-                                    const name = s.node.nodeName.toLowerCase();
-                                    const id = s.node.id ? `#${s.node.id}` : "";
-                                    const classes = s.node.className ? `.${s.node.className.split(" ").join(".")}` : "";
-                                    sources.push(`${name}${id}${classes}`);
-                                }
-                            });
-                        }
-
-                        setLayoutShifts((prev) => [{ sources, value: shift.value }, ...prev].slice(0, 5));
-                    }
-                }
-            });
-
-            observer.observe({ type: "layout-shift", buffered: true });
-            return () => observer.disconnect();
-        } catch (e) {
-            console.warn("PerformanceObserver not supported for layout-shift");
-        }
+        window.addEventListener("touchstart", handleTouchStart);
+        window.addEventListener("touchend", handleTouchEnd);
 
         return () => {
             window.removeEventListener("resize", handleResize);
             window.removeEventListener("scroll", handleScroll);
+            window.removeEventListener("touchstart", handleTouchStart);
+            window.removeEventListener("touchend", handleTouchEnd);
         };
     }, []);
+
+    // Detection logic in a separate effect to avoid stale closures
+    useEffect(() => {
+        if (scrollY === 0 && !isTouching) {
+            // Potentially a programmatic jump if we were scrolled down
+            // Note: we can't easily know the *previous* Y here without another ref/state
+        }
+    }, [scrollY, isTouching]);
+
+    // Handle path changes event log
+    useEffect(() => {
+        const time = new Date().toLocaleTimeString().split(" ")[0];
+        setEvents(prev => [{ msg: `NAV: ${pathname}`, time }, ...prev].slice(0, 5));
+    }, [pathname]);
 
     if (!isVisible) return null;
 
     return (
         <div className="fixed bottom-4 left-4 right-4 z-[9999] pointer-events-none">
-            <div className="bg-black/80 text-white p-3 rounded-lg text-[10px] font-mono shadow-2xl border border-white/20 backdrop-blur-md space-y-2 max-h-48 overflow-y-auto pointer-events-auto">
-                <div className="flex justify-between items-center border-b border-white/10 pb-1 mb-1">
-                    <span className="text-gold font-bold">iOS DEBUGGER</span>
-                    <button
-                        onClick={() => setIsVisible(false)}
-                        className="text-white/40 hover:text-white"
-                    >
-                        [close]
-                    </button>
+            <div className="bg-black/90 text-white p-3 rounded-lg text-[10px] font-mono shadow-2xl border border-white/20 backdrop-blur-md space-y-2 pointer-events-auto">
+                <div className="flex justify-between items-center border-b border-white/10 pb-1">
+                    <span className="text-gold font-bold">iOS ADVANCED DEBUG</span>
+                    <button onClick={() => setIsVisible(false)} className="text-white/40">[x]</button>
                 </div>
 
-                <div className="flex flex-col gap-1">
-                    <div className="flex justify-between gap-4">
-                        <span className="text-gray-400">H:</span>{" "}
-                        <span className={viewportHeight % 1 !== 0 ? "text-red-400" : "text-green-400"}>
-                            {viewportHeight.toFixed(0)}px
-                        </span>
-                        <span className="text-gray-400">Y:</span>{" "}
-                        <span className="text-blue-400">
-                            {Math.round(scrollY)}
-                        </span>
+                <div className="grid grid-cols-2 gap-2">
+                    <div className="flex justify-between border-r border-white/10 pr-2">
+                        <span className="text-gray-400">H:</span>
+                        <span className={viewportHeight % 1 !== 0 ? "text-red-400" : "text-green-400"}>{viewportHeight.toFixed(0)}px</span>
+                    </div>
+                    <div className="flex justify-between px-1">
+                        <span className="text-gray-400">Y:</span>
+                        <span className="text-blue-400">{Math.round(scrollY)}px</span>
+                    </div>
+                    <div className="flex justify-between border-r border-white/10 pr-2">
+                        <span className="text-gray-400">TOUCH:</span>
+                        <span className={isTouching ? "text-green-400" : "text-red-400"}>{isTouching ? "YES" : "NO"}</span>
+                    </div>
+                    <div className="flex justify-between px-1">
+                        <span className="text-gray-400">PATH:</span>
+                        <span className="text-purple-400 truncate ml-1 text-[8px]">{pathname}</span>
                     </div>
                 </div>
 
-                <div>
-                    <div className="text-gray-400 mb-1 border-t border-white/10 pt-1 mt-1">Recent Shifts:</div>
-                    {layoutShifts.length === 0 ? (
-                        <div className="text-white/20 italic">No shifts detected yet...</div>
-                    ) : (
-                        <div className="space-y-1">
-                            {layoutShifts.map((shift, i) => (
-                                <div key={i} className="bg-white/5 p-1 rounded border-l-2 border-red-500">
-                                    <div className="flex justify-between">
-                                        <span className="text-red-400">Score: {shift.value.toFixed(4)}</span>
-                                    </div>
-                                    <div className="text-gray-300 truncate text-[8px]">
-                                        {shift.sources.join(", ") || "Unknown source"}
-                                    </div>
-                                </div>
-                            ))}
+                <div className="space-y-1">
+                    <div className="text-gray-400 text-[8px] uppercase">Event Log:</div>
+                    {events.map((ev, i) => (
+                        <div key={i} className="flex gap-2 text-[8px] border-l border-white/20 pl-1">
+                            <span className="text-white/40">{ev.time}</span>
+                            <span className="truncate">{ev.msg}</span>
                         </div>
-                    )}
+                    ))}
                 </div>
             </div>
         </div>
