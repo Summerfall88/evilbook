@@ -38,7 +38,7 @@ const ReviewDetail = () => {
 
   if (!review) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-dvh flex items-center justify-center">
         <div className="text-center space-y-4">
           <p className="text-muted-foreground font-body text-lg">Рецензия не найдена</p>
           <Link to="/reviews" className="text-gold hover:underline text-sm">
@@ -56,7 +56,7 @@ const ReviewDetail = () => {
   });
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-dvh">
       <section className="container mx-auto px-4 py-8 max-w-3xl">
         <Link
           to="/reviews"
