@@ -126,22 +126,21 @@
 
   html {
     width: 100%;
-    height: -webkit-fill-available;
     margin: 0;
     padding: 0;
     overflow-x: hidden;
-    -webkit-text-size-adjust: 100%;
   }
 
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body);
     width: 100%;
-    min-height: 100vh;
-    min-height: -webkit-fill-available;
+    min-height: 100%;
     position: relative;
     -webkit-tap-highlight-color: transparent;
     overflow-x: hidden;
+    /* Prevent the bounce effect that triggers jumps */
+    overscroll-behavior-y: none;
   }
 
   #root {

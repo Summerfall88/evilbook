@@ -5,18 +5,9 @@ const ScrollToTop = () => {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    const scrollToTop = () => {
-      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-      document.documentElement.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-      document.body.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    };
-
-    // Immediate scroll
-    scrollToTop();
-
-    // Small delay to ensure any browser scroll-restoration or layout shifts are handled
-    const timeoutId = setTimeout(scrollToTop, 10);
-    return () => clearTimeout(timeoutId);
+    // Temporarily disabled to rule out JS-induced jumps
+    console.log("ScrollToTop blocked a potential jump for path:", pathname);
+    return () => { };
   }, [pathname]);
 
   return null;
