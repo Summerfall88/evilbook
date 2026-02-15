@@ -31,7 +31,7 @@ const App = () => {
           <AuthProvider>
             <ScrollToTop />
             <Header />
-            <main className="pt-20">
+            <main className="pt-20 min-h-dvh flex flex-col">
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/reviews" element={<Reviews />} />

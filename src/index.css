@@ -138,8 +138,10 @@
     min-height: 100dvh;
     position: relative;
     -webkit-tap-highlight-color: transparent;
-    -webkit-overflow-scrolling: touch;
+    /* Removed -webkit-overflow-scrolling: touch; as it causes issues in modern iOS */
     overflow-x: hidden;
+    overscroll-behavior-y: none;
+    /* Prevent elastic bounce from triggering scroll-to-top bugs */
   }
 
   #root {
