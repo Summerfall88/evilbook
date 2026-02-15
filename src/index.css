@@ -128,23 +128,22 @@
   body {
     margin: 0;
     padding: 0;
-    /* Let the browser handle the height and scroll naturally */
+    overflow-x: hidden;
+    overscroll-behavior-y: none;
+    /* Prevent bounce-back issues on iOS */
   }
 
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body);
-    /* Forcing a consistent min-height without using vh which shifts on iOS */
-    min-height: 100%;
+    width: 100%;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
   }
 
   #root {
     width: 100%;
-    overflow-x: hidden;
-  }
-
-  #root {
-    width: 100%;
+    position: relative;
   }
 
   h1,

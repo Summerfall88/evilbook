@@ -51,9 +51,7 @@ const Reviews = () => {
       {filtered.length === 0 ? <p className="text-center text-muted-foreground py-20 font-body">
         Ничего не найдено
       </p> : <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filtered.map((review, i) => <div key={review.id} className="animate-fade-in" style={{
-          animationDelay: `${i * 60}ms`
-        }}>
+        {filtered.map((review) => <div key={review.id}>
           <ReviewCard review={review} onEdit={isAdmin ? () => {
             setEditingReview(review);
             setDialogOpen(true);

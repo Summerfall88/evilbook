@@ -64,11 +64,11 @@ const Index = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {latestReviews.map((review, i) => <div key={review.id} className="animate-fade-in" style={{
-          animationDelay: `${i * 80}ms`
-        }}>
-          <ReviewCard review={review} onEdit={isAdmin ? () => openEdit(review) : undefined} />
-        </div>)}
+        {latestReviews.map((review) => (
+          <div key={review.id}>
+            <ReviewCard review={review} onEdit={isAdmin ? () => openEdit(review) : undefined} />
+          </div>
+        ))}
       </div>
     </section>
 
