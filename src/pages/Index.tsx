@@ -26,7 +26,7 @@ const Index = () => {
     setEditingReview(review);
     setDialogOpen(true);
   };
-  return <div className="min-h-[100dvh]">
+  return <div className="min-h-screen">
     {/* Hero */}
     <section className="relative py-24 px-4 border-b border-border/30 overflow-hidden">
       {/* Background portrait */}

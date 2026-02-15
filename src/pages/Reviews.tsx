@@ -26,7 +26,7 @@ const Reviews = () => {
     deleteReview(id);
     setReviews(getReviews());
   };
-  return <div className="min-h-[100dvh]">
+  return <div className="min-h-screen">
     <section className="container mx-auto px-4 py-12">
       <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-10">
         <div>
