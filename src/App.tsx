@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import Reviews from "./pages/Reviews";
 import ReviewDetail from "./pages/ReviewDetail";
 import NotFound from "./pages/NotFound";
+import DebugMonitor from "./components/DebugMonitor";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ const App = () => {
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>
+            <DebugMonitor />
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
