@@ -22,12 +22,14 @@ const App = () => (
         <AuthProvider>
           <ScrollToTop />
           <Header />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/reviews" element={<Reviews />} />
-            <Route path="/review/:id" element={<ReviewDetail />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <main className="pt-20">
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/reviews" element={<Reviews />} />
+              <Route path="/review/:id" element={<ReviewDetail />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </main>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
