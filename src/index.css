@@ -126,29 +126,36 @@
 
   html {
     width: 100%;
+    height: 100%;
     margin: 0;
     padding: 0;
-    overflow-x: hidden;
+    overflow: hidden;
+    /* Lock the outer container */
   }
 
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body);
     width: 100%;
-    min-height: 100%;
-    position: relative;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    position: fixed;
+    /* Prevent body itself from scrolling/bouncing */
+    overflow: hidden;
     -webkit-tap-highlight-color: transparent;
-    overflow-x: hidden;
-    /* Prevent the bounce effect that triggers jumps */
-    overscroll-behavior-y: none;
   }
 
   #root {
     width: 100%;
-    min-height: 100%;
+    height: 100%;
+    overflow-y: auto;
+    /* Content scrolls here */
     display: flex;
     flex-direction: column;
     isolation: isolate;
+    -webkit-overflow-scrolling: touch;
+    /* Enable smooth momentum scroll on iOS */
   }
 
   h1,

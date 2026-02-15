@@ -4,46 +4,42 @@ import { useLocation } from "react-router-dom";
 const DebugMonitor = () => {
     const { pathname } = useLocation();
     const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
-    const [scrollY, setScrollY] = useState(window.scrollY);
+    const [scrollY, setScrollY] = useState(0);
     const [isTouching, setIsTouching] = useState(false);
     const [events, setEvents] = useState<{ msg: string; time: string }[]>([]);
-    const [lastJump, setLastJump] = useState<string | null>(null);
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
         setIsVisible(true);
+        const root = document.getElementById("root");
 
         const handleResize = () => setViewportHeight(window.innerHeight);
         const handleScroll = () => {
-            const currentY = window.scrollY;
-            setScrollY(currentY);
+            if (root) {
+                setScrollY(root.scrollTop);
+            }
         };
 
         const handleTouchStart = () => setIsTouching(true);
         const handleTouchEnd = () => setIsTouching(false);
 
         window.addEventListener("resize", handleResize);
-        window.addEventListener("scroll", handleScroll);
+        if (root) {
+            root.addEventListener("scroll", handleScroll);
+        }
         window.addEventListener("touchstart", handleTouchStart);
         window.addEventListener("touchend", handleTouchEnd);
 
         return () => {
             window.removeEventListener("resize", handleResize);
-            window.removeEventListener("scroll", handleScroll);
+            if (root) {
+                root.removeEventListener("scroll", handleScroll);
+            }
             window.removeEventListener("touchstart", handleTouchStart);
             window.removeEventListener("touchend", handleTouchEnd);
         };
     }, []);
 
-    // Detection logic in a separate effect to avoid stale closures
-    useEffect(() => {
-        if (scrollY === 0 && !isTouching) {
-            // Potentially a programmatic jump if we were scrolled down
-            // Note: we can't easily know the *previous* Y here without another ref/state
-        }
-    }, [scrollY, isTouching]);
-
-    // Handle path changes event log
     useEffect(() => {
         const time = new Date().toLocaleTimeString().split(" ")[0];
         setEvents(prev => [{ msg: `NAV: ${pathname}`, time }, ...prev].slice(0, 5));
@@ -65,7 +61,7 @@ const DebugMonitor = () => {
                         <span className={viewportHeight % 1 !== 0 ? "text-red-400" : "text-green-400"}>{viewportHeight.toFixed(0)}px</span>
                     </div>
                     <div className="flex justify-between px-1">
-                        <span className="text-gray-400">Y:</span>
+                        <span className="text-gray-400">Y(root):</span>
                         <span className="text-blue-400">{Math.round(scrollY)}px</span>
                     </div>
                     <div className="flex justify-between border-r border-white/10 pr-2">
