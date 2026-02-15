@@ -124,23 +124,25 @@
     @apply border-border;
   }
 
-  html,
+  html {
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+  }
+
   body {
     margin: 0;
     padding: 0;
-    overflow-x: hidden;
+    overflow-y: visible;
+    overflow-x: visible;
+    min-height: 100vh;
     -webkit-overflow-scrolling: touch;
-    width: 100%;
+    position: relative;
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
   }
 
   #root {
     width: 100%;
-    position: relative;
-  }
-
-  body {
-    @apply bg-background text-foreground;
-    font-family: var(--font-body);
   }
 
   h1,
