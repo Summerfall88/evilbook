@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Menu, BookOpen } from "lucide-react";
+import { Menu } from "lucide-react";
 import AuthDialog from "@/components/AuthDialog";
 import UserProfileSheet from "@/components/UserProfileSheet";
 import {
@@ -21,7 +21,7 @@ const Header = () => {
   const [profileOpen, setProfileOpen] = useState(false);
 
   return (
-    <header className="border-b border-border/50 bg-background/95 md:bg-background/90 md:backdrop-blur-sm fixed top-0 left-0 right-0 z-40 transition-transform duration-300 [transform:translate3d(0,0,0)] [backface-visibility:hidden]">
+    <header className="fixed top-0 left-0 right-0 z-40 bg-background/95 border-b border-border/50 md:backdrop-blur-sm [transform:translateZ(0)]">
       <div className="container mx-auto flex items-center justify-between py-4 px-4">
         <Link to="/" className="flex items-center gap-3 group">
           <div className="w-10 h-10 rounded-lg bg-card border border-border/50 flex items-center justify-center overflow-hidden group-hover:border-[#ce6355]/50 transition-colors duration-300">
