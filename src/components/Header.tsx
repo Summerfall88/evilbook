@@ -21,7 +21,7 @@ const Header = () => {
   const [profileOpen, setProfileOpen] = useState(false);
 
   return (
-    <header className="absolute top-0 left-0 right-0 z-40 bg-background/95 border-b border-border/50">
+    <header className="fixed top-0 left-0 right-0 z-40 bg-background/95 border-b border-border/50 backdrop-blur-sm">
       <div className="container mx-auto flex items-center justify-between py-4 px-4">
         <Link to="/" className="flex items-center gap-3 group">
           <div className="w-10 h-10 rounded-lg bg-card border border-border/50 flex items-center justify-center overflow-hidden group-hover:border-[#ce6355]/50 transition-colors duration-300">

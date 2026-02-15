@@ -2,27 +2,30 @@ import { useState, useEffect } from "react";
 
 const DebugMonitor = () => {
     const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
+    const [scrollY, setScrollY] = useState(window.scrollY);
     const [layoutShifts, setLayoutShifts] = useState<{ sources: string[]; value: number }[]>([]);
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
-        // Only show in development or if a specific flag is set
-        // For now, let's enable it so the user can see it
         setIsVisible(true);
 
         const handleResize = () => {
             setViewportHeight(window.innerHeight);
         };
 
-        window.addEventListener("resize", handleResize);
+        const handleScroll = () => {
+            setScrollY(window.scrollY);
+        };
 
-        // Layout Shift Observer
+        window.addEventListener("resize", handleResize);
+        window.addEventListener("scroll", handleScroll);
+
         try {
             const observer = new PerformanceObserver((list) => {
                 for (const entry of list.getEntries()) {
                     if (entry.entryType === "layout-shift") {
                         const shift = entry as any;
-                        if (shift.hadRecentInput) return; // Ignore shifts caused by user input
+                        if (shift.hadRecentInput) return;
 
                         const sources: string[] = [];
                         if (shift.sources) {
@@ -47,7 +50,10 @@ const DebugMonitor = () => {
             console.warn("PerformanceObserver not supported for layout-shift");
         }
 
-        return () => window.removeEventListener("resize", handleResize);
+        return () => {
+            window.removeEventListener("resize", handleResize);
+            window.removeEventListener("scroll", handleScroll);
+        };
     }, []);
 
     if (!isVisible) return null;
@@ -65,17 +71,21 @@ const DebugMonitor = () => {
                     </button>
                 </div>
 
-                <div className="flex gap-4">
-                    <div>
-                        <span className="text-gray-400">Viewport Height:</span>{" "}
+                <div className="flex flex-col gap-1">
+                    <div className="flex justify-between gap-4">
+                        <span className="text-gray-400">H:</span>{" "}
                         <span className={viewportHeight % 1 !== 0 ? "text-red-400" : "text-green-400"}>
-                            {viewportHeight.toFixed(2)}px
+                            {viewportHeight.toFixed(0)}px
+                        </span>
+                        <span className="text-gray-400">Y:</span>{" "}
+                        <span className="text-blue-400">
+                            {Math.round(scrollY)}
                         </span>
                     </div>
                 </div>
 
                 <div>
-                    <div className="text-gray-400 mb-1">Recent Layout Shifts:</div>
+                    <div className="text-gray-400 mb-1 border-t border-white/10 pt-1 mt-1">Recent Shifts:</div>
                     {layoutShifts.length === 0 ? (
                         <div className="text-white/20 italic">No shifts detected yet...</div>
                     ) : (
@@ -85,7 +95,7 @@ const DebugMonitor = () => {
                                     <div className="flex justify-between">
                                         <span className="text-red-400">Score: {shift.value.toFixed(4)}</span>
                                     </div>
-                                    <div className="text-gray-300 truncate">
+                                    <div className="text-gray-300 truncate text-[8px]">
                                         {shift.sources.join(", ") || "Unknown source"}
                                     </div>
                                 </div>
