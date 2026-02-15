@@ -148,6 +148,7 @@
     display: flex;
     flex-direction: column;
     isolation: isolate;
+    -webkit-overflow-scrolling: touch;
   }
 
   h1,
