@@ -32,14 +32,14 @@ const ReviewDetail = () => {
 
   useEffect(() => {
     if (showComments && commentsRef.current) {
-      commentsRef.current.scrollIntoView({ behavior: "smooth" });
+      commentsRef.current.scrollIntoView({ behavior: "auto" });
     }
   }, [showComments]);
 
   if (!review) {
     return (
-      <div className="flex items-center justify-center grow">
-        <div className="text-center space-y-4">
+      <div className="flex items-center justify-center grow text-center space-y-4">
+        <div>
           <p className="text-muted-foreground font-body text-lg">Рецензия не найдена</p>
           <Link to="/reviews" className="text-gold hover:underline text-sm">
             ← Вернуться к рецензиям
@@ -108,7 +108,7 @@ const ReviewDetail = () => {
                 if (!showComments) {
                   setShowComments(true);
                 } else {
-                  commentsRef.current?.scrollIntoView({ behavior: "smooth" });
+                  commentsRef.current?.scrollIntoView({ behavior: "auto" });
                 }
               }}
               className="gap-2"
@@ -128,6 +128,5 @@ const ReviewDetail = () => {
     </div>
   );
 };
-
 
 export default ReviewDetail;
