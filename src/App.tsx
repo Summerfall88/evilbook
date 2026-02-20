@@ -11,15 +11,24 @@ import Index from "./pages/Index";
 import Reviews from "./pages/Reviews";
 import ReviewDetail from "./pages/ReviewDetail";
 import NotFound from "./pages/NotFound";
-import DebugMonitor from "./components/DebugMonitor";
 
 const queryClient = new QueryClient();
 
 const App = () => {
   useEffect(() => {
-    // Disable automatic scroll restoration to prevent jumps on iOS
+    // Disable automatic scroll restoration
     if ('scrollRestoration' in window.history) {
       window.history.scrollRestoration = 'manual';
+    }
+
+    // Detect iOS to apply specific fixes
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+    if (isIOS) {
+      document.documentElement.classList.add('is-ios');
+    } else {
+      document.documentElement.classList.remove('is-ios');
     }
   }, []);
 
@@ -40,7 +49,6 @@ const App = () => {
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>
-            <DebugMonitor />
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
