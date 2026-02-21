@@ -16,7 +16,7 @@ interface AuthDialogProps {
 }
 
 const AuthDialog = ({ trigger, open, onOpenChange }: AuthDialogProps) => {
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const [mode, setMode] = useState<"login" | "register" | "forgot_password">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -27,6 +27,20 @@ const AuthDialog = ({ trigger, open, onOpenChange }: AuthDialogProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
+
+    if (mode === "forgot_password") {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin,
+      });
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("Ссылка для восстановления пароля отправлена на почту");
+        setMode("login");
+      }
+      setSubmitting(false);
+      return;
+    }
 
     if (mode === "register") {
       const { error } = await supabase.auth.signUp({
@@ -72,12 +86,14 @@ const AuthDialog = ({ trigger, open, onOpenChange }: AuthDialogProps) => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="font-display font-bold">
-              {mode === "login" ? "Вход" : "Регистрация"}
+              {mode === "login" ? "Вход" : mode === "register" ? "Регистрация" : "Восстановление пароля"}
             </DialogTitle>
             <DialogDescription>
               {mode === "login"
                 ? "Войдите, чтобы оставлять комментарии"
-                : "Создайте аккаунт для участия в обсуждениях"}
+                : mode === "register"
+                  ? "Создайте аккаунт для участия в обсуждениях"
+                  : "Введите email, на который зарегистрирован аккаунт"}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -96,14 +112,16 @@ const AuthDialog = ({ trigger, open, onOpenChange }: AuthDialogProps) => {
               onChange={(e) => setEmail(e.target.value)}
               required
             />
-            <Input
-              type="password"
-              placeholder="Пароль"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-            />
+            {mode !== "forgot_password" && (
+              <Input
+                type="password"
+                placeholder="Пароль"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+            )}
 
             {mode === "register" && (
               <div className="flex items-start gap-3">
@@ -131,26 +149,35 @@ const AuthDialog = ({ trigger, open, onOpenChange }: AuthDialogProps) => {
               className="w-full"
               disabled={submitting || (mode === "register" && !agreedToTerms)}
             >
-              {submitting ? "..." : mode === "login" ? "Войти" : "Зарегистрироваться"}
+              {submitting ? "..." : mode === "login" ? "Войти" : mode === "register" ? "Зарегистрироваться" : "Отправить ссылку"}
             </Button>
           </form>
-          <p className="text-center text-sm text-muted-foreground">
-            {mode === "login" ? (
-              <>
-                Нет аккаунта?{" "}
-                <button onClick={switchToRegister} className="text-gold hover:underline">
-                  Зарегистрироваться
-                </button>
-              </>
-            ) : (
-              <>
-                Уже есть аккаунт?{" "}
-                <button onClick={switchToLogin} className="text-gold hover:underline">
-                  Войти
-                </button>
-              </>
+
+          <div className="flex flex-col items-center gap-2 mt-4 text-sm text-muted-foreground">
+            {mode === "login" && (
+              <button type="button" onClick={() => setMode("forgot_password")} className="hover:text-foreground hover:underline transition-colors text-xs">
+                Забыли пароль?
+              </button>
             )}
-          </p>
+
+            <p className="text-center">
+              {mode === "login" ? (
+                <>
+                  Нет аккаунта?{" "}
+                  <button onClick={switchToRegister} className="text-gold hover:underline">
+                    Зарегистрироваться
+                  </button>
+                </>
+              ) : (
+                <>
+                  Уже есть аккаунт?{" "}
+                  <button onClick={switchToLogin} className="text-gold hover:underline">
+                    Войти
+                  </button>
+                </>
+              )}
+            </p>
+          </div>
         </DialogContent>
       </Dialog>
 
