@@ -12,6 +12,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { toast } from "sonner";
+import TermsDialog from "@/components/TermsDialog";
 
 interface UserProfileSheetProps {
   open: boolean;
@@ -25,6 +26,7 @@ const UserProfileSheet = ({ open, onOpenChange }: UserProfileSheetProps) => {
   const [newsletter, setNewsletter] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [termsOpen, setTermsOpen] = useState(false);
 
   useEffect(() => {
     if (open && user) {
@@ -73,62 +75,75 @@ const UserProfileSheet = ({ open, onOpenChange }: UserProfileSheetProps) => {
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-80 sm:w-96">
-        <SheetHeader>
-          <SheetTitle className="font-display font-bold">Личный кабинет</SheetTitle>
-          <SheetDescription>Управление аккаунтом</SheetDescription>
-        </SheetHeader>
+    <>
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent side="right" className="w-80 sm:w-96">
+          <SheetHeader>
+            <SheetTitle className="font-display font-bold">Личный кабинет</SheetTitle>
+            <SheetDescription>Управление аккаунтом</SheetDescription>
+          </SheetHeader>
 
-        <div className="mt-6 space-y-6">
-          {/* Comment stats */}
-          <div className="border border-border/50 rounded-lg p-4 text-center">
-            <p className="text-2xl font-display font-bold text-primary">{commentCount}</p>
-            <p className="text-sm text-muted-foreground">комментариев оставлено</p>
-          </div>
+          <div className="mt-6 space-y-6">
+            {/* Comment stats */}
+            <div className="border border-border/50 rounded-lg p-4 text-center">
+              <p className="text-2xl font-display font-bold text-primary">{commentCount}</p>
+              <p className="text-sm text-muted-foreground">комментариев оставлено</p>
+            </div>
 
-          {/* Change name */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Имя</label>
-            <Input
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              placeholder="Ваше имя"
-            />
-            <Button size="sm" onClick={handleSaveName} disabled={saving} className="w-full">
-              Сохранить имя
-            </Button>
-          </div>
+            {/* Change name */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Имя</label>
+              <Input
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder="Ваше имя"
+              />
+              <Button size="sm" onClick={handleSaveName} disabled={saving} className="w-full">
+                Сохранить имя
+              </Button>
+            </div>
 
-          {/* Change password */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Новый пароль</label>
-            <Input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Минимум 6 символов"
-              minLength={6}
-            />
-            <Button size="sm" onClick={handleChangePassword} disabled={saving} className="w-full">
-              Сменить пароль
-            </Button>
-          </div>
+            {/* Change password */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Новый пароль</label>
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Минимум 6 символов"
+                minLength={6}
+              />
+              <Button size="sm" onClick={handleChangePassword} disabled={saving} className="w-full">
+                Сменить пароль
+              </Button>
+            </div>
 
-          {/* Newsletter */}
-          <div className="flex items-center gap-3 border border-border/50 rounded-lg p-4">
-            <Checkbox
-              id="newsletter"
-              checked={newsletter}
-              onCheckedChange={(v) => setNewsletter(v === true)}
-            />
-            <label htmlFor="newsletter" className="text-sm text-foreground cursor-pointer">
-              Подписаться на email-рассылку о новостях сайта
-            </label>
+            {/* Newsletter */}
+            <div className="flex items-center gap-3 border border-border/50 rounded-lg p-4">
+              <Checkbox
+                id="newsletter"
+                checked={newsletter}
+                onCheckedChange={(v) => setNewsletter(v === true)}
+              />
+              <label htmlFor="newsletter" className="text-sm text-foreground cursor-pointer">
+                Подписаться на email-рассылку о новостях сайта
+              </label>
+            </div>
+
+            {/* Terms link */}
+            <button
+              type="button"
+              onClick={() => setTermsOpen(true)}
+              className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors text-left"
+            >
+              Пользовательское соглашение и политика конфиденциальности
+            </button>
           </div>
-        </div>
-      </SheetContent>
-    </Sheet>
+        </SheetContent>
+      </Sheet>
+
+      <TermsDialog open={termsOpen} onOpenChange={setTermsOpen} />
+    </>
   );
 };
 
