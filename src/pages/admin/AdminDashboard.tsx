@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getReviews } from "@/data/reviews";
 import { BookOpen, MessageSquare, Users, Loader2 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function AdminDashboard() {
     // Получение количества рецензий (из локального файла данных, т.к. они не в Supabase)
@@ -54,7 +55,9 @@ export default function AdminDashboard() {
                         <CardTitle className="text-sm font-medium">
                             Всего рецензий
                         </CardTitle>
-                        <BookOpen className="h-4 w-4 text-muted-foreground" />
+                        <Link to="/nimda/reviews">
+                            <BookOpen className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors cursor-pointer" />
+                        </Link>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
@@ -73,7 +76,9 @@ export default function AdminDashboard() {
                         <CardTitle className="text-sm font-medium">
                             Всего комментариев
                         </CardTitle>
-                        <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                        <Link to="/nimda/comments">
+                            <MessageSquare className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors cursor-pointer" />
+                        </Link>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
@@ -92,7 +97,9 @@ export default function AdminDashboard() {
                         <CardTitle className="text-sm font-medium">
                             Пользователи
                         </CardTitle>
-                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <Link to="/nimda/users">
+                            <Users className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors cursor-pointer" />
+                        </Link>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
