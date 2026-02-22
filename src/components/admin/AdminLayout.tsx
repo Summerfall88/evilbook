@@ -54,6 +54,14 @@ export function AdminLayout() {
                 </div>
             </aside>
             <main className="flex w-full flex-col overflow-hidden py-6 lg:py-8">
+                {location.pathname !== "/nimda" && (
+                    <Link
+                        to="/nimda"
+                        className="text-xs text-muted-foreground hover:text-primary mb-4 w-fit transition-colors"
+                    >
+                        ← Назад в дашборд
+                    </Link>
+                )}
                 <Outlet />
             </main>
         </div>
