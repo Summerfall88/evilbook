@@ -11,6 +11,13 @@ import Index from "./pages/Index";
 import Reviews from "./pages/Reviews";
 import ReviewDetail from "./pages/ReviewDetail";
 import NotFound from "./pages/NotFound";
+import { ProtectedRoute } from "./components/admin/ProtectedRoute";
+import { AdminLayout } from "./components/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminReviews from "./pages/admin/AdminReviews";
+import AdminReviewForm from "./pages/admin/AdminReviewForm";
+import AdminComments from "./pages/admin/AdminComments";
+import AdminUsers from "./pages/admin/AdminUsers";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +53,20 @@ const App = () => {
                 <Route path="/" element={<Index />} />
                 <Route path="/reviews" element={<Reviews />} />
                 <Route path="/review/:id" element={<ReviewDetail />} />
+
+                {/* Admin Routes */}
+                <Route path="/nimda" element={<ProtectedRoute />}>
+                  <Route element={<AdminLayout />}>
+                    <Route index element={<AdminDashboard />} />
+                    <Route path="reviews" element={<AdminReviews />} />
+                    <Route path="reviews/new" element={<AdminReviewForm />} />
+                    <Route path="reviews/:id/edit" element={<AdminReviewForm />} />
+                    <Route path="comments" element={<AdminComments />} />
+                    <Route path="users" element={<AdminUsers />} />
+                    {/* Placeholder for future admin routes */}
+                  </Route>
+                </Route>
+
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>

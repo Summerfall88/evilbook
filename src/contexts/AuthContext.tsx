@@ -8,7 +8,9 @@ import { toast } from "sonner";
 interface AuthState {
   user: User | null;
   displayName: string | null;
+  role: "admin" | "user" | null;
   loading: boolean;
+  profileLoading: boolean;
   signOut: () => Promise<void>;
 }
 
@@ -17,7 +19,9 @@ const AuthContext = createContext<AuthState | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
+  const [role, setRole] = useState<"admin" | "user" | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(true);
   const [recoveryMode, setRecoveryMode] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [updatingPassword, setUpdatingPassword] = useState(false);
@@ -36,17 +40,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
 
       if (currentUser) {
+        setProfileLoading(true);
         // Fetch profile in background without blocking UI
         supabase
           .from("profiles")
-          .select("display_name")
+          .select("display_name, role")
           .eq("id", currentUser.id)
           .maybeSingle()
           .then(({ data }) => {
             setDisplayName(data?.display_name ?? "Пользователь");
+            setRole(data?.role as "admin" | "user" | null);
+            setProfileLoading(false);
           });
       } else {
         setDisplayName(null);
+        setRole(null);
+        setProfileLoading(false);
       }
     });
 
@@ -74,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, displayName, loading, signOut }}>
+    <AuthContext.Provider value={{ user, displayName, role, loading, profileLoading, signOut }}>
       {children}
       <Dialog open={recoveryMode} onOpenChange={setRecoveryMode}>
         <DialogContent className="sm:max-w-md">
