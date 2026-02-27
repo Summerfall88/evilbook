@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { Review } from "@/data/reviews";
+import { useQueryClient } from "@tanstack/react-query";
+import { getReviewById, Review } from "@/data/reviews";
 import StarRating from "./StarRating";
 interface ReviewCardProps {
   review: Review;
@@ -14,8 +15,18 @@ const ReviewCard = ({
     month: "long",
     year: "numeric"
   });
+  const queryClient = useQueryClient();
+
+  const handleMouseEnter = () => {
+    queryClient.prefetchQuery({
+      queryKey: ["review", review.id],
+      queryFn: () => getReviewById(review.id),
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    });
+  };
+
   return <article className="group bg-card border border-border/50 rounded-lg overflow-hidden transition-all duration-300 hover:border-gold/30 hover:shadow-[0_0_30px_-10px_hsl(42,60%,55%,0.15)] relative">
-    <Link to={`/review/${review.id}`} className="block">
+    <Link to={`/review/${review.id}`} className="block" onMouseEnter={handleMouseEnter} onFocus={handleMouseEnter}>
       <div className="aspect-[2/3] overflow-hidden relative">
         <img src={review.coverUrl} alt={review.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
         <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />

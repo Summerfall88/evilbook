@@ -19,7 +19,15 @@ import AdminReviewForm from "./pages/admin/AdminReviewForm";
 import AdminComments from "./pages/admin/AdminComments";
 import AdminUsers from "./pages/admin/AdminUsers";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 1, // Data is fresh for 1 minute
+      gcTime: 1000 * 60 * 5, // Keep in cache for 5 minutes
+      refetchOnWindowFocus: false, // Don't refetch on tab switch by default 
+    },
+  },
+});
 
 const App = () => {
   useEffect(() => {

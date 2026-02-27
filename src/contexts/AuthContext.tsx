@@ -27,6 +27,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [updatingPassword, setUpdatingPassword] = useState(false);
 
   useEffect(() => {
+    let currentUserId: string | null = null;
+
     // Listen for auth changes (handles initial session too)
     const {
       data: { subscription },
@@ -40,7 +42,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
 
       if (currentUser) {
-        setProfileLoading(true);
+        if (currentUserId !== currentUser.id) {
+          setProfileLoading(true);
+        }
+        currentUserId = currentUser.id;
+
         // Fetch profile in background without blocking UI
         supabase
           .from("profiles")
@@ -53,6 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setProfileLoading(false);
           });
       } else {
+        currentUserId = null;
         setDisplayName(null);
         setRole(null);
         setProfileLoading(false);
