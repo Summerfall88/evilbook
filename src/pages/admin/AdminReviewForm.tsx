@@ -1,9 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { getReviewById, saveReview, type Review } from "@/data/reviews";
+import { uploadReviewCover } from "@/lib/storage";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -19,13 +20,13 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Image as ImageIcon, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 
 const reviewSchema = z.object({
     title: z.string().min(2, "Название должно содержать минимум 2 символа"),
     author: z.string().min(2, "Имя автора должно содержать минимум 2 символа"),
-    coverUrl: z.string().url("Укажите корректный URL изображения"),
+    coverUrl: z.string().min(1, "Укажите ссылку на изображение или загрузите файл"),
     rating: z.coerce.number().min(1).max(5),
     date: z.string().min(10, "Выберите дату"),
     text: z.string().min(10, "Текст рецензии слишком короткий"),
@@ -39,6 +40,9 @@ export default function AdminReviewForm() {
     const navigate = useNavigate();
     const isEditing = Boolean(id);
     const queryClient = useQueryClient();
+    const [isUploading, setIsUploading] = useState(false);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const form = useForm<ReviewFormValues>({
         resolver: zodResolver(reviewSchema),
@@ -84,20 +88,69 @@ export default function AdminReviewForm() {
                 text: existingReview.text,
                 quote: existingReview.quote || "",
             });
+            if (existingReview.coverUrl) {
+                setPreviewUrl(existingReview.coverUrl);
+            }
         }
     }, [existingReview, isEditing, form]);
 
-    function onSubmit(data: ReviewFormValues) {
-        const reviewId = isEditing && id ? id : crypto.randomUUID();
+    async function onSubmit(data: ReviewFormValues) {
+        setIsUploading(true);
+        try {
+            let finalCoverUrl = data.coverUrl;
 
-        const newReview: Review = {
-            id: reviewId,
-            ...data,
-            quote: data.quote || undefined,
-        };
+            // If a new file relies in the input, upload it
+            const file = fileInputRef.current?.files?.[0];
+            if (file) {
+                toast.loading("Загрузка обложки...", { id: "upload-toast" });
+                try {
+                    finalCoverUrl = await uploadReviewCover(file);
+                    form.setValue("coverUrl", finalCoverUrl); // Update form state
+                    toast.success("Обложка загружена", { id: "upload-toast" });
+                } catch (error) {
+                    toast.error("Ошибка при загрузке обложки", { id: "upload-toast" });
+                    setIsUploading(false);
+                    return; // Stop form submission if upload fails
+                }
+            } else if (!finalCoverUrl) {
+                toast.error("Пожалуйста, выберите обложку или укажите ссылку");
+                setIsUploading(false);
+                return;
+            }
 
-        saveMutation.mutate(newReview);
+            const reviewId = isEditing && id ? id : crypto.randomUUID();
+
+            const newReview: Review = {
+                id: reviewId,
+                ...data,
+                coverUrl: finalCoverUrl,
+                quote: data.quote || undefined,
+            };
+
+            saveMutation.mutate(newReview);
+        } finally {
+            setIsUploading(false);
+        }
     }
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            // Create a local preview URL
+            const url = URL.createObjectURL(file);
+            setPreviewUrl(url);
+            // Clear the text input since we have a file
+            form.setValue("coverUrl", file.name); // Just to satisfy zod temporarily, will be replaced
+        }
+    };
+
+    const handleRemoveImage = () => {
+        setPreviewUrl(null);
+        form.setValue("coverUrl", "");
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
+    };
 
     return (
         <div className="space-y-6 max-w-4xl">
@@ -164,14 +217,64 @@ export default function AdminReviewForm() {
                                         control={form.control}
                                         name="coverUrl"
                                         render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>URL обложки (изображение)</FormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="https://example.com/image.jpg" type="url" {...field} />
-                                                </FormControl>
-                                                <FormDescription>
-                                                    Прямая ссылка на картинку с обложкой.
-                                                </FormDescription>
+                                            <FormItem className="col-span-1 md:col-span-2">
+                                                <FormLabel>Обложка книги (загрузка файла или URL)</FormLabel>
+                                                <div className="flex flex-col gap-4">
+                                                    {previewUrl ? (
+                                                        <div className="relative w-32 h-44 rounded-md overflow-hidden border border-border group">
+                                                            <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                                                            <button
+                                                                type="button"
+                                                                onClick={handleRemoveImage}
+                                                                className="absolute top-1 right-1 bg-background/80 hover:bg-destructive hover:text-destructive-foreground p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                                            >
+                                                                <X className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center justify-center w-full">
+                                                            <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-muted/30 border-muted-foreground/20 hover:bg-muted/50 transition-colors">
+                                                                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                                                    <Upload className="w-8 h-8 mb-3 text-muted-foreground" />
+                                                                    <p className="mb-2 text-sm text-muted-foreground"><span className="font-semibold">Нажмите для загрузки</span> или перетащите файл</p>
+                                                                    <p className="text-xs text-muted-foreground/70">PNG, JPG или WEBP (макс. 5MB)</p>
+                                                                </div>
+                                                                <input
+                                                                    id="dropzone-file"
+                                                                    type="file"
+                                                                    accept="image/*"
+                                                                    className="hidden"
+                                                                    ref={fileInputRef}
+                                                                    onChange={handleFileChange}
+                                                                />
+                                                            </label>
+                                                        </div>
+                                                    )}
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="h-px bg-border flex-1"></div>
+                                                        <span className="text-xs text-muted-foreground uppercase">Или вставьте ссылку</span>
+                                                        <div className="h-px bg-border flex-1"></div>
+                                                    </div>
+                                                    <FormControl>
+                                                        <div className="relative">
+                                                            <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                                            <Input
+                                                                placeholder="https://example.com/image.jpg"
+                                                                type="url"
+                                                                className="pl-9"
+                                                                {...field}
+                                                                onChange={(e) => {
+                                                                    field.onChange(e);
+                                                                    if (e.target.value && !fileInputRef.current?.files?.length) {
+                                                                        setPreviewUrl(e.target.value);
+                                                                    } else if (!e.target.value && !fileInputRef.current?.files?.length) {
+                                                                        setPreviewUrl(null);
+                                                                    }
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    </FormControl>
+                                                </div>
                                                 <FormMessage />
                                             </FormItem>
                                         )}
@@ -248,8 +351,8 @@ export default function AdminReviewForm() {
                                     >
                                         Отмена
                                     </Button>
-                                    <Button type="submit" disabled={saveMutation.isPending}>
-                                        {saveMutation.isPending ? "Сохранение..." : (isEditing ? "Сохранить изменения" : "Опубликовать")}
+                                    <Button type="submit" disabled={saveMutation.isPending || isUploading}>
+                                        {(saveMutation.isPending || isUploading) ? "Сохранение..." : (isEditing ? "Сохранить изменения" : "Опубликовать")}
                                     </Button>
                                 </div>
                             </form>
