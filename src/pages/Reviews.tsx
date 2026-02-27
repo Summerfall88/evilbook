@@ -1,34 +1,55 @@
 import { useState, useMemo } from "react";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ReviewCard from "@/components/ReviewCard";
 import ReviewDialog from "@/components/ReviewDialog";
-import { getReviews, saveReview, deleteReview, Review } from "@/data/reviews";
+import { getReviews, saveReview, deleteReview, type Review } from "@/data/reviews";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const Reviews = () => {
-  const [reviews, setReviews] = useState(getReviews);
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingReview, setEditingReview] = useState<Review | null>(null);
   const isAdmin = useAdmin();
+  const queryClient = useQueryClient();
+
+  const { data: reviews, isLoading, isError } = useQuery({
+    queryKey: ["reviews"],
+    queryFn: getReviews,
+  });
 
   const filtered = useMemo(() => {
+    if (!reviews) return [];
     const q = search.toLowerCase().trim();
     const sorted = [...reviews].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     if (!q) return sorted;
     return sorted.filter(r => r.title.toLowerCase().includes(q) || r.author.toLowerCase().includes(q));
   }, [reviews, search]);
 
+  const saveMutation = useMutation({
+    mutationFn: saveReview,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reviews"] });
+      setDialogOpen(false);
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteReview,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reviews"] });
+      setDialogOpen(false);
+    }
+  });
+
   const handleSave = (review: Review) => {
-    saveReview(review);
-    setReviews(getReviews());
+    saveMutation.mutate(review);
   };
 
   const handleDelete = (id: string) => {
-    deleteReview(id);
-    setReviews(getReviews());
+    deleteMutation.mutate(id);
   };
 
   return (
@@ -54,16 +75,29 @@ const Reviews = () => {
           <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Поиск по названию или автору..." className="pl-10 bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50" />
         </div>
 
-        {filtered.length === 0 ? <p className="text-center text-muted-foreground py-20 font-body">
-          Ничего не найдено
-        </p> : <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filtered.map((review) => <div key={review.id}>
-            <ReviewCard review={review} onEdit={isAdmin ? () => {
-              setEditingReview(review);
-              setDialogOpen(true);
-            } : undefined} />
-          </div>)}
-        </div>}
+        {isLoading ? (
+          <div className="flex justify-center items-center py-20 text-muted-foreground">
+            <Loader2 className="w-8 h-8 animate-spin" />
+            <span className="ml-3 font-body">Загрузка рецензий...</span>
+          </div>
+        ) : isError ? (
+          <p className="text-center text-destructive py-20 font-body">
+            Произошла ошибка при загрузке данных
+          </p>
+        ) : filtered.length === 0 ? (
+          <p className="text-center text-muted-foreground py-20 font-body">
+            Ничего не найдено
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filtered.map((review) => <div key={review.id}>
+              <ReviewCard review={review} onEdit={isAdmin ? () => {
+                setEditingReview(review);
+                setDialogOpen(true);
+              } : undefined} />
+            </div>)}
+          </div>
+        )}
       </section>
 
       {isAdmin && <ReviewDialog open={dialogOpen} onClose={() => setDialogOpen(false)} review={editingReview} onSave={handleSave} onDelete={handleDelete} />}

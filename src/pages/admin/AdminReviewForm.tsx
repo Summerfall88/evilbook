@@ -3,7 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { getReviews, saveReview, type Review } from "@/data/reviews";
+import { getReviewById, saveReview, type Review } from "@/data/reviews";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ export default function AdminReviewForm() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const isEditing = Boolean(id);
+    const queryClient = useQueryClient();
 
     const form = useForm<ReviewFormValues>({
         resolver: zodResolver(reviewSchema),
@@ -51,25 +53,39 @@ export default function AdminReviewForm() {
         },
     });
 
-    useEffect(() => {
-        if (isEditing && id) {
-            const existingReview = getReviews().find((r) => r.id === id);
-            if (existingReview) {
-                form.reset({
-                    title: existingReview.title,
-                    author: existingReview.author,
-                    coverUrl: existingReview.coverUrl,
-                    rating: existingReview.rating,
-                    date: existingReview.date,
-                    text: existingReview.text,
-                    quote: existingReview.quote || "",
-                });
-            } else {
-                toast.error("Рецензия не найдена");
-                navigate("/nimda/reviews");
-            }
+    const { data: existingReview, isLoading } = useQuery({
+        queryKey: ["review", id],
+        queryFn: () => getReviewById(id!),
+        enabled: isEditing && !!id,
+    });
+
+    const saveMutation = useMutation({
+        mutationFn: saveReview,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "reviews"] });
+            queryClient.invalidateQueries({ queryKey: ["reviews"] });
+            toast.success(isEditing ? "Рецензия обновлена" : "Рецензия успешно добавлена");
+            navigate("/nimda/reviews");
+        },
+        onError: (error) => {
+            console.error("Error saving review:", error);
+            toast.error("Произошла ошибка при сохранении рецензии");
         }
-    }, [id, isEditing, form, navigate]);
+    });
+
+    useEffect(() => {
+        if (isEditing && existingReview) {
+            form.reset({
+                title: existingReview.title,
+                author: existingReview.author,
+                coverUrl: existingReview.coverUrl,
+                rating: existingReview.rating,
+                date: existingReview.date,
+                text: existingReview.text,
+                quote: existingReview.quote || "",
+            });
+        }
+    }, [existingReview, isEditing, form]);
 
     function onSubmit(data: ReviewFormValues) {
         const reviewId = isEditing && id ? id : crypto.randomUUID();
@@ -80,10 +96,7 @@ export default function AdminReviewForm() {
             quote: data.quote || undefined,
         };
 
-        saveReview(newReview);
-
-        toast.success(isEditing ? "Рецензия обновлена" : "Рецензия успешно добавлена");
-        navigate("/nimda/reviews");
+        saveMutation.mutate(newReview);
     }
 
     return (
@@ -110,64 +123,23 @@ export default function AdminReviewForm() {
 
             <Card>
                 <CardContent className="pt-6">
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    {isLoading ? (
+                        <div className="flex justify-center items-center py-20">
+                            <span className="text-muted-foreground">Загрузка данных...</span>
+                        </div>
+                    ) : (
+                        <Form {...form}>
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
 
-                            <div className="grid gap-6 md:grid-cols-2">
-                                <FormField
-                                    control={form.control}
-                                    name="title"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Название книги</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="Например: 1984" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                <FormField
-                                    control={form.control}
-                                    name="author"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Автор книги</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="Джордж Оруэлл" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                <FormField
-                                    control={form.control}
-                                    name="coverUrl"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>URL обложки (изображение)</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="https://example.com/image.jpg" type="url" {...field} />
-                                            </FormControl>
-                                            <FormDescription>
-                                                Прямая ссылка на картинку с обложкой.
-                                            </FormDescription>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid gap-6 md:grid-cols-2">
                                     <FormField
                                         control={form.control}
-                                        name="date"
+                                        name="title"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Дата прочтения</FormLabel>
+                                                <FormLabel>Название книги</FormLabel>
                                                 <FormControl>
-                                                    <Input type="date" {...field} />
+                                                    <Input placeholder="Например: 1984" {...field} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -176,66 +148,113 @@ export default function AdminReviewForm() {
 
                                     <FormField
                                         control={form.control}
-                                        name="rating"
+                                        name="author"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Оценка (1-5)</FormLabel>
+                                                <FormLabel>Автор книги</FormLabel>
                                                 <FormControl>
-                                                    <Input type="number" min={1} max={5} {...field} />
+                                                    <Input placeholder="Джордж Оруэлл" {...field} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
                                         )}
                                     />
+
+                                    <FormField
+                                        control={form.control}
+                                        name="coverUrl"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>URL обложки (изображение)</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="https://example.com/image.jpg" type="url" {...field} />
+                                                </FormControl>
+                                                <FormDescription>
+                                                    Прямая ссылка на картинку с обложкой.
+                                                </FormDescription>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <FormField
+                                            control={form.control}
+                                            name="date"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Дата прочтения</FormLabel>
+                                                    <FormControl>
+                                                        <Input type="date" {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+
+                                        <FormField
+                                            control={form.control}
+                                            name="rating"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Оценка (1-5)</FormLabel>
+                                                    <FormControl>
+                                                        <Input type="number" min={1} max={5} {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
                                 </div>
-                            </div>
 
-                            <FormField
-                                control={form.control}
-                                name="quote"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Цитата (необязательно)</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="Запоминающаяся фраза из книги..." {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                                <FormField
+                                    control={form.control}
+                                    name="quote"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Цитата (необязательно)</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="Запоминающаяся фраза из книги..." {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
 
-                            <FormField
-                                control={form.control}
-                                name="text"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Текст рецензии</FormLabel>
-                                        <FormControl>
-                                            <Textarea
-                                                placeholder="Ваши впечатления о книге..."
-                                                className="min-h-[200px] resize-y"
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                                <FormField
+                                    control={form.control}
+                                    name="text"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Текст рецензии</FormLabel>
+                                            <FormControl>
+                                                <Textarea
+                                                    placeholder="Ваши впечатления о книге..."
+                                                    className="min-h-[200px] resize-y"
+                                                    {...field}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
 
-                            <div className="flex justify-end gap-4">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => navigate("/nimda/reviews")}
-                                >
-                                    Отмена
-                                </Button>
-                                <Button type="submit">
-                                    {isEditing ? "Сохранить изменения" : "Опубликовать"}
-                                </Button>
-                            </div>
-                        </form>
-                    </Form>
+                                <div className="flex justify-end gap-4">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => navigate("/nimda/reviews")}
+                                    >
+                                        Отмена
+                                    </Button>
+                                    <Button type="submit" disabled={saveMutation.isPending}>
+                                        {saveMutation.isPending ? "Сохранение..." : (isEditing ? "Сохранить изменения" : "Опубликовать")}
+                                    </Button>
+                                </div>
+                            </form>
+                        </Form>
+                    )}
                 </CardContent>
             </Card>
         </div>

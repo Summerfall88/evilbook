@@ -10,8 +10,11 @@ export default function AdminDashboard() {
     const { data: reviewsCount, isLoading: reviewsLoading } = useQuery({
         queryKey: ["admin", "reviewsCount"],
         queryFn: async () => {
-            const reviews = getReviews();
-            return reviews.length;
+            const { count, error } = await supabase
+                .from("reviews")
+                .select("*", { count: "exact", head: true });
+            if (error) throw error;
+            return count || 0;
         },
     });
 

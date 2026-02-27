@@ -1,17 +1,23 @@
 import { useRef, useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, MessageCircle } from "lucide-react";
-import { getReviews } from "@/data/reviews";
+import { ArrowLeft, MessageCircle, Loader2 } from "lucide-react";
+import { getReviewById } from "@/data/reviews";
 import StarRating from "@/components/StarRating";
 import CommentsSection from "@/components/CommentsSection";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 const ReviewDetail = () => {
   const { id } = useParams<{ id: string }>();
   const commentsRef = useRef<HTMLDivElement>(null);
-  const reviews = getReviews();
-  const review = reviews.find((r) => r.id === id);
+
+  const { data: review, isLoading, isError } = useQuery({
+    queryKey: ["review", id],
+    queryFn: () => getReviewById(id!),
+    enabled: !!id,
+  });
+
   const [showComments, setShowComments] = useState(false);
   const [commentCount, setCommentCount] = useState<number | null>(null);
 
@@ -36,11 +42,19 @@ const ReviewDetail = () => {
     }
   }, [showComments]);
 
-  if (!review) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center grow text-center space-y-4">
+      <div className="flex items-center justify-center grow text-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground mx-auto" />
+      </div>
+    );
+  }
+
+  if (isError || !review) {
+    return (
+      <div className="flex items-center justify-center grow text-center space-y-4 py-20">
         <div>
-          <p className="text-muted-foreground font-body text-lg">Рецензия не найдена</p>
+          <p className="text-muted-foreground font-body text-lg">Рецензия не найдена или произошла ошибка</p>
           <Link to="/reviews" className="text-gold hover:underline text-sm">
             ← Вернуться к рецензиям
           </Link>

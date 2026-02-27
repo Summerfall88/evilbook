@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+
 export interface Review {
   id: string;
   title: string;
@@ -7,104 +9,89 @@ export interface Review {
   date: string;
   text: string;
   quote?: string;
+  created_at?: string;
 }
 
-const STORAGE_KEY = "evilbook-reviews";
+// Convert DB schema to local Review type
+const mapReviewFromDB = (data: any): Review => ({
+  id: data.id,
+  title: data.title,
+  author: data.author,
+  coverUrl: data.cover_url,
+  rating: data.rating,
+  date: data.date,
+  text: data.text,
+  quote: data.quote || undefined,
+  created_at: data.created_at,
+});
 
-const defaultReviews: Review[] = [
-  {
-    id: "1",
-    title: "Мастер и Маргарита",
-    author: "Михаил Булгаков",
-    coverUrl: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300&h=450&fit=crop",
-    rating: 5,
-    date: "2026-01-15",
-    text: "Роман, который невозможно прочитать один раз. Каждое перечитывание открывает новые слои смысла. Булгаков создал вселенную, в которой хочется остаться навсегда.",
-    quote: "Рукописи не горят.",
-  },
-  {
-    id: "2",
-    title: "Портрет Дориана Грея",
-    author: "Оскар Уайльд",
-    coverUrl: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=300&h=450&fit=crop",
-    rating: 5,
-    date: "2026-01-28",
-    text: "Эстетизм, декаданс и моральный упадок — всё, что я люблю в литературе. Уайльд написал не просто роман, а манифест красоты и её тёмной стороны.",
-    quote: "Единственный способ избавиться от искушения — поддаться ему.",
-  },
-  {
-    id: "3",
-    title: "Маленькая жизнь",
-    author: "Ханья Янагихара",
-    coverUrl: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=300&h=450&fit=crop",
-    rating: 4,
-    date: "2026-02-01",
-    text: "Книга, которая ломает тебя и собирает заново. Болезненная, жестокая, но невероятно честная история о дружбе, травме и любви.",
-    quote: "Ты — это то, что с тобой сделали, но ты и то, кем ты решил стать.",
-  },
-  {
-    id: "4",
-    title: "Щегол",
-    author: "Донна Тартт",
-    coverUrl: "https://images.unsplash.com/photo-1476275466078-4007374efbbe?w=300&h=450&fit=crop",
-    rating: 4,
-    date: "2025-12-20",
-    text: "Тартт умеет писать так, что ты чувствуешь запах каждой комнаты. Эпическая история о потере, искусстве и поиске себя.",
-    quote: "Красота спасёт мир? Или мир погубит красоту?",
-  },
-  {
-    id: "5",
-    title: "Ребекка",
-    author: "Дафна дю Морье",
-    coverUrl: "https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=300&h=450&fit=crop",
-    rating: 5,
-    date: "2025-12-05",
-    text: "Готический роман в своём лучшем проявлении. Атмосфера Мэндерли окутывает с первых страниц и не отпускает до финала.",
-    quote: "Прошлой ночью мне снилось, что я вернулась в Мэндерли.",
-  },
-  {
-    id: "6",
-    title: "Тайная история",
-    author: "Донна Тартт",
-    coverUrl: "https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=300&h=450&fit=crop",
-    rating: 5,
-    date: "2025-11-18",
-    text: "Тёмная академия во всей красе. Группа студентов, одержимых античностью, переходит все границы. Идеальный роман для осенних вечеров.",
-    quote: "Красота — это ужас.",
-  },
-  {
-    id: "7",
-    title: "Норвежский лес",
-    author: "Харуки Мураками",
-    coverUrl: "https://images.unsplash.com/photo-1524578271613-d550eacf6090?w=300&h=450&fit=crop",
-    rating: 3,
-    date: "2025-11-01",
-    text: "Меланхоличная и тихая история о юности и потере. Мураками пишет так, словно каждое слово — вздох.",
-    quote: "Смерть — не противоположность жизни, а её часть.",
-  },
-];
+export async function getReviews(): Promise<Review[]> {
+  const { data, error } = await supabase
+    .from("reviews")
+    .select("*")
+    .order("date", { ascending: false });
 
-export function getReviews(): Review[] {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored) {
-    return JSON.parse(stored);
+  if (error) {
+    console.error("Error fetching reviews:", error);
+    return [];
   }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultReviews));
-  return defaultReviews;
+
+  return data.map(mapReviewFromDB);
 }
 
-export function saveReview(review: Review): void {
-  const reviews = getReviews();
-  const idx = reviews.findIndex((r) => r.id === review.id);
-  if (idx >= 0) {
-    reviews[idx] = review;
+export async function getReviewById(id: string): Promise<Review | null> {
+  const { data, error } = await supabase
+    .from("reviews")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    console.error(`Error fetching review ${id}:`, error);
+    return null;
+  }
+
+  return mapReviewFromDB(data);
+}
+
+export async function saveReview(review: Review): Promise<void> {
+  const reviewData = {
+    title: review.title,
+    author: review.author,
+    cover_url: review.coverUrl,
+    rating: review.rating,
+    date: review.date,
+    text: review.text,
+    quote: review.quote || null,
+  };
+
+  // If review is completely new, it might come with an id from the old frontend code,
+  // but let's let Supabase handle generation if we just insert.
+  // We'll check if the id seems to be a valid UUID already. If not, don't pass it.
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(review.id);
+
+  if (isUUID) {
+    // Trying to update or insert with known ID
+    const { error } = await supabase
+      .from("reviews")
+      .upsert({ ...reviewData, id: review.id } as any);
+
+    if (error) throw error;
   } else {
-    reviews.unshift(review);
+    // Just insert new
+    const { error } = await supabase
+      .from("reviews")
+      .insert(reviewData as any);
+
+    if (error) throw error;
   }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(reviews));
 }
 
-export function deleteReview(id: string): void {
-  const reviews = getReviews().filter((r) => r.id !== id);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(reviews));
+export async function deleteReview(id: string): Promise<void> {
+  const { error } = await supabase
+    .from("reviews")
+    .delete()
+    .eq("id", id);
+
+  if (error) throw error;
 }

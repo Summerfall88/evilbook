@@ -3,7 +3,8 @@ import { getReviews, deleteReview, type Review } from "@/data/reviews";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Trash2, Search, ArrowUpDown, Pencil } from "lucide-react";
+import { Trash2, Search, ArrowUpDown, Pencil, Loader2 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { toast } from "sonner";
@@ -31,21 +32,36 @@ import {
 type SortOrder = "newest" | "oldest";
 
 export default function AdminReviews() {
-    const [reviews, setReviews] = useState<Review[]>(getReviews());
+    const queryClient = useQueryClient();
+    const { data: reviews, isLoading, isError } = useQuery({
+        queryKey: ["reviews"],
+        queryFn: getReviews,
+    });
+
     const [searchQuery, setSearchQuery] = useState("");
     const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
     const [reviewToDelete, setReviewToDelete] = useState<string | null>(null);
 
+    const deleteMutation = useMutation({
+        mutationFn: deleteReview,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["reviews"] });
+            queryClient.invalidateQueries({ queryKey: ["admin", "reviewsCount"] });
+            toast.success("Рецензия успешно удалена");
+            setReviewToDelete(null);
+        },
+        onError: () => {
+            toast.error("Произошла ошибка при удалении");
+        }
+    });
+
     const handleDelete = () => {
         if (!reviewToDelete) return;
-
-        deleteReview(reviewToDelete);
-        setReviews(getReviews()); // Обновляем локальный стейт
-        toast.success("Рецензия успешно удалена");
-        setReviewToDelete(null);
+        deleteMutation.mutate(reviewToDelete);
     };
 
     const filteredAndSortedReviews = useMemo(() => {
+        if (!reviews) return [];
         let result = [...reviews];
 
         // Filter
@@ -122,7 +138,19 @@ export default function AdminReviews() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filteredAndSortedReviews.length === 0 ? (
+                                {isLoading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="h-24 text-center">
+                                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground mx-auto" />
+                                        </TableCell>
+                                    </TableRow>
+                                ) : isError ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="h-24 text-center text-destructive">
+                                            Ошибка при загрузке рецензий.
+                                        </TableCell>
+                                    </TableRow>
+                                ) : filteredAndSortedReviews.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={5} className="h-24 text-center">
                                             Ничего не найдено.

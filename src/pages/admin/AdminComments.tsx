@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,13 +32,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 // Определяем тип для комментария, возвращаемого из БД с присоединенным профилем
 type CommentWithProfile = {
     id: string;
-    book_id: string;
+    review_id: string;
     content: string;
     created_at: string;
     user_id: string;
     profiles: {
         display_name: string | null;
-        avatar_url: string | null;
     } | null;
 };
 
@@ -47,32 +46,64 @@ export default function AdminComments() {
     const queryClient = useQueryClient();
 
     // Получаем комментарии из Supabase
-    const { data: comments, isLoading, isError } = useQuery({
+    const {
+        data,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        isLoading,
+        isError,
+    } = useInfiniteQuery({
         queryKey: ["admin", "comments"],
-        queryFn: async () => {
-            const { data, error } = await supabase
-                .from("comments")
-                .select(`
-          id,
-          book_id,
-          content,
-          created_at,
-          user_id,
-          profiles (
-            display_name,
-            avatar_url
-          )
-        `)
-                .order("created_at", { ascending: false });
+        queryFn: async ({ pageParam = 0 }) => {
+            const PAGE_SIZE = 10;
+            const from = pageParam * PAGE_SIZE;
+            const to = from + PAGE_SIZE - 1;
 
-            if (error) {
-                console.error("Ошибка при получении комментариев:", error);
-                throw error;
+            const { data: commentsData, error: commentsError } = await supabase
+                .from("comments")
+                .select("*")
+                .order("created_at", { ascending: false })
+                .range(from, to);
+
+            if (commentsError) {
+                console.error("Ошибка при получении комментариев:", commentsError);
+                throw commentsError;
             }
 
-            return data as unknown as CommentWithProfile[];
+            const userIds = [...new Set(commentsData.map((c) => c.user_id))];
+            let profilesMap: Record<string, { display_name: string | null }> = {};
+
+            if (userIds.length > 0) {
+                const { data: profilesData, error: profilesError } = await supabase
+                    .from("profiles")
+                    .select("id, display_name")
+                    .in("id", userIds);
+
+                if (!profilesError && profilesData) {
+                    profilesMap = profilesData.reduce(
+                        (acc, p) => ({ ...acc, [p.id]: { display_name: p.display_name } }),
+                        {}
+                    );
+                }
+            }
+
+            return commentsData.map((c) => ({
+                id: c.id,
+                review_id: c.review_id,
+                content: c.content,
+                created_at: c.created_at,
+                user_id: c.user_id,
+                profiles: profilesMap[c.user_id] || { display_name: null },
+            })) as CommentWithProfile[];
+        },
+        initialPageParam: 0,
+        getNextPageParam: (lastPage, allPages) => {
+            return lastPage.length === 10 ? allPages.length : undefined;
         },
     });
+
+    const comments = data?.pages.flat() || [];
 
     // Мутация для удаления комментария
     const deleteMutation = useMutation({
@@ -172,7 +203,6 @@ export default function AdminComments() {
                                             <TableCell>
                                                 <div className="flex items-center gap-3">
                                                     <Avatar className="h-8 w-8">
-                                                        <AvatarImage src={comment.profiles?.avatar_url || undefined} />
                                                         <AvatarFallback>
                                                             {comment.profiles?.display_name?.charAt(0)?.toUpperCase() || "?"}
                                                         </AvatarFallback>
@@ -188,8 +218,8 @@ export default function AdminComments() {
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                <span className="text-xs text-muted-foreground truncate max-w-[120px] inline-block" title={comment.book_id}>
-                                                    ID: {comment.book_id}
+                                                <span className="text-xs text-muted-foreground truncate max-w-[120px] inline-block" title={comment.review_id}>
+                                                    ID: {comment.review_id}
                                                 </span>
                                             </TableCell>
                                             <TableCell className="hidden md:table-cell text-sm whitespace-nowrap">
@@ -233,6 +263,24 @@ export default function AdminComments() {
                                 )}
                             </TableBody>
                         </Table>
+                        {hasNextPage && (
+                            <div className="flex justify-center p-4 border-t">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => fetchNextPage()}
+                                    disabled={isFetchingNextPage}
+                                >
+                                    {isFetchingNextPage ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            Загрузка...
+                                        </>
+                                    ) : (
+                                        "Показать еще 10 комментариев"
+                                    )}
+                                </Button>
+                            </div>
+                        )}
                     </div>
                 </CardContent>
             </Card>
