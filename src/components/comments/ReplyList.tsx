@@ -35,14 +35,9 @@ export const ReplyList = ({ parentId, onReply, userId, onDelete, refreshTrigger 
                 .select("*", { count: "exact", head: true })
                 .eq("parent_id", parentId);
             setReplyCount(count || 0);
-
-            // If we expand, fetch first 2 replies automatically
-            if (expanded) {
-                fetchReplies(false);
-            }
         };
         fetchCount();
-    }, [parentId, expanded, refreshTrigger]);
+    }, [parentId, refreshTrigger]); // removed `expanded` — was causing extra count query on expand
 
     const fetchReplies = async (loadAll = false) => {
         setLoading(true);
@@ -61,24 +56,21 @@ export const ReplyList = ({ parentId, onReply, userId, onDelete, refreshTrigger 
         if (repliesError) {
             console.error("Error fetching replies:", repliesError);
         } else if (repliesData) {
-            // Fetch profiles separately
-            const userIds = [...new Set(repliesData.map(r => r.user_id))];
+            const userIds = [...new Set(repliesData.map((r: any) => r.user_id))];
             let profilesMap: Record<string, { display_name: string | null }> = {};
 
             if (userIds.length > 0) {
-                const { data: profilesData, error: profilesError } = await supabase
+                const { data: profilesData } = await supabase
                     .from("profiles")
                     .select("id, display_name")
                     .in("id", userIds);
 
-                if (profilesError) {
-                    console.error("Error fetching profiles:", profilesError);
-                } else if (profilesData) {
-                    profilesMap = profilesData.reduce((acc, p) => ({ ...acc, [p.id]: { display_name: p.display_name } }), {});
+                if (profilesData) {
+                    profilesData.forEach((p: any) => { profilesMap[p.id] = { display_name: p.display_name }; });
                 }
             }
 
-            setReplies(repliesData.map(d => ({
+            setReplies(repliesData.map((d: any) => ({
                 id: d.id,
                 content: d.content,
                 created_at: d.created_at,

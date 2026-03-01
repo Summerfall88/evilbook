@@ -16,6 +16,7 @@ const ReviewDetail = () => {
     queryKey: ["review", id],
     queryFn: () => getReviewById(id!),
     enabled: !!id,
+    staleTime: 1000 * 60 * 5, // 5 минут — повторный открыв без спиннера
   });
 
   const [showComments, setShowComments] = useState(false);
@@ -109,7 +110,7 @@ const ReviewDetail = () => {
           </div>
 
           <div className="border-t border-border/30 pt-8">
-            <p className="font-body text-base sm:text-lg leading-relaxed text-secondary-foreground whitespace-pre-line">
+            <p className="font-body text-base sm:text-lg leading-relaxed text-secondary-foreground whitespace-pre-line break-words">
               {review.text}
             </p>
           </div>

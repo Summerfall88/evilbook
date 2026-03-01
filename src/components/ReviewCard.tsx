@@ -40,7 +40,7 @@ const ReviewCard = ({
         </h3>
         <p className="text-base text-muted-foreground">{review.author}</p>
         <p className="text-xs text-muted-foreground/60">{formattedDate}</p>
-        <p className="text-secondary-foreground line-clamp-3 leading-relaxed text-base">
+        <p className="text-secondary-foreground line-clamp-3 leading-relaxed text-base break-words">
           {review.text}
         </p>
       </div>

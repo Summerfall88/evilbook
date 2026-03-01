@@ -10,6 +10,7 @@ export interface Review {
   text: string;
   quote?: string;
   created_at?: string;
+  sortOrder?: number;
 }
 
 // Convert DB schema to local Review type
@@ -23,13 +24,14 @@ const mapReviewFromDB = (data: any): Review => ({
   text: data.text,
   quote: data.quote || undefined,
   created_at: data.created_at,
+  sortOrder: data.sort_order ?? 0,
 });
 
 export async function getReviews(): Promise<Review[]> {
   const { data, error } = await supabase
     .from("reviews")
     .select("*")
-    .order("date", { ascending: false });
+    .order("sort_order", { ascending: true });
 
   if (error) {
     console.error("Error fetching reviews:", error);
@@ -94,4 +96,24 @@ export async function deleteReview(id: string): Promise<void> {
     .eq("id", id);
 
   if (error) throw error;
+}
+
+/**
+ * Swap sort_order of two reviews (for moving up/down in admin).
+ */
+export async function swapReviewOrder(idA: string, orderA: number, idB: string, orderB: number): Promise<void> {
+  // Swap the values
+  const { error: e1 } = await supabase
+    .from("reviews")
+    .update({ sort_order: orderB } as any)
+    .eq("id", idA);
+
+  if (e1) throw e1;
+
+  const { error: e2 } = await supabase
+    .from("reviews")
+    .update({ sort_order: orderA } as any)
+    .eq("id", idB);
+
+  if (e2) throw e2;
 }

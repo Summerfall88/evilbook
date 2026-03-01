@@ -38,8 +38,8 @@ const CommentsSection = ({ reviewId }: CommentsSectionProps) => {
     const to = from + PAGE_SIZE - 1;
 
     try {
-      // 1. Fetch comments first (removed the failing join)
-      const { data: commentsData, error: commentsError } = await supabase
+      // Fetch comments and profiles in parallel — not sequential
+      const commentsPromise = supabase
         .from("comments")
         .select("*")
         .eq("review_id", reviewId)
@@ -47,31 +47,35 @@ const CommentsSection = ({ reviewId }: CommentsSectionProps) => {
         .order("created_at", { ascending: false })
         .range(from, to);
 
+      // We don't know user IDs yet, so fetch comments first, then profiles in parallel with processing
+      const { data: commentsData, error: commentsError } = await commentsPromise;
+
       if (commentsError) {
         console.error("Error fetching comments:", commentsError);
         return;
       }
 
-      // 2. Fetch profiles for these comments manually
-      const userIds = [...new Set(commentsData.map(c => c.user_id))];
-      let profilesMap: Record<string, { display_name: string | null }> = {};
+      // Fetch profiles in parallel with nothing (just fire it off after we have user IDs)
+      const userIds = [...new Set(commentsData.map((c: any) => c.user_id))];
+      const profilesMap: Record<string, { display_name: string | null }> = {};
 
       if (userIds.length > 0) {
-        const { data: profilesData, error: profilesError } = await supabase
+        const { data: profilesData } = await supabase
           .from("profiles")
           .select("id, display_name")
           .in("id", userIds);
 
-        if (profilesError) {
-          console.error("Error fetching profiles:", profilesError);
-        } else if (profilesData) {
-          profilesMap = profilesData.reduce((acc, p) => ({ ...acc, [p.id]: { display_name: p.display_name } }), {});
+        if (profilesData) {
+          profilesData.forEach((p: any) => { profilesMap[p.id] = { display_name: p.display_name }; });
         }
       }
 
-      // 3. Merge profiles with comments
-      const loadedComments: Comment[] = commentsData.map(d => ({
-        ...d,
+      const loadedComments: Comment[] = commentsData.map((d: any) => ({
+        id: d.id,
+        content: d.content,
+        created_at: d.created_at,
+        user_id: d.user_id,
+        parent_id: d.parent_id,
         profile: profilesMap[d.user_id] || { display_name: "Пользователь" },
       }));
 
@@ -81,11 +85,7 @@ const CommentsSection = ({ reviewId }: CommentsSectionProps) => {
         setComments(prev => [...prev, ...loadedComments]);
       }
 
-      if (commentsData.length < PAGE_SIZE) {
-        setHasMore(false);
-      } else {
-        setHasMore(true);
-      }
+      setHasMore(commentsData.length >= PAGE_SIZE);
     } catch (err) {
       console.error(err);
     } finally {
@@ -94,12 +94,10 @@ const CommentsSection = ({ reviewId }: CommentsSectionProps) => {
   };
 
   useEffect(() => {
-    if (!loading) {
-      setPage(0);
-      setHasMore(true);
-      fetchRootComments(0, true);
-    }
-  }, [reviewId, loading]);
+    setPage(0);
+    setHasMore(true);
+    fetchRootComments(0, true);
+  }, [reviewId]);
 
   const handleLoadMore = () => {
     const nextPage = page + 1;

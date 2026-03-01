@@ -136,11 +136,11 @@ export default function AdminReviewForm() {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            // Create a local preview URL
+            // Create a local preview URL — also use it as form value since it's a real URL (blob:http://...)
             const url = URL.createObjectURL(file);
             setPreviewUrl(url);
-            // Clear the text input since we have a file
-            form.setValue("coverUrl", file.name); // Just to satisfy zod temporarily, will be replaced
+            // Use the blob URL so type="url" validation and Zod both pass
+            form.setValue("coverUrl", url, { shouldValidate: true });
         }
     };
 

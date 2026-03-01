@@ -17,15 +17,28 @@ const Reviews = () => {
 
   const { data: reviews, isLoading, isError } = useQuery({
     queryKey: ["reviews"],
-    queryFn: getReviews,
+    queryFn: async () => {
+      const data = await getReviews();
+      // Persist to localStorage for instant display on next page load
+      try { localStorage.setItem("evilbook-reviews-cache", JSON.stringify(data)); } catch { }
+      return data;
+    },
+    staleTime: 1000 * 60 * 5,
+    placeholderData: () => {
+      // Show cached data instantly while fresh data loads in background
+      try {
+        const cached = localStorage.getItem("evilbook-reviews-cache");
+        return cached ? JSON.parse(cached) as Review[] : undefined;
+      } catch { return undefined; }
+    },
   });
 
   const filtered = useMemo(() => {
     if (!reviews) return [];
     const q = search.toLowerCase().trim();
-    const sorted = [...reviews].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    if (!q) return sorted;
-    return sorted.filter(r => r.title.toLowerCase().includes(q) || r.author.toLowerCase().includes(q));
+    // Already sorted by sort_order from API
+    if (!q) return reviews;
+    return reviews.filter(r => r.title.toLowerCase().includes(q) || r.author.toLowerCase().includes(q));
   }, [reviews, search]);
 
   const saveMutation = useMutation({

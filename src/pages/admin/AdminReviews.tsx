@@ -1,9 +1,9 @@
 import { useState, useMemo } from "react";
-import { getReviews, deleteReview, type Review } from "@/data/reviews";
+import { getReviews, deleteReview, swapReviewOrder, type Review } from "@/data/reviews";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Trash2, Search, ArrowUpDown, Pencil, Loader2 } from "lucide-react";
+import { Trash2, Search, Pencil, Loader2, ChevronUp, ChevronDown } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
@@ -29,7 +29,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 
-type SortOrder = "newest" | "oldest";
+
 
 export default function AdminReviews() {
     const queryClient = useQueryClient();
@@ -39,7 +39,6 @@ export default function AdminReviews() {
     });
 
     const [searchQuery, setSearchQuery] = useState("");
-    const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
     const [reviewToDelete, setReviewToDelete] = useState<string | null>(null);
 
     const deleteMutation = useMutation({
@@ -60,9 +59,9 @@ export default function AdminReviews() {
         deleteMutation.mutate(reviewToDelete);
     };
 
-    const filteredAndSortedReviews = useMemo(() => {
+    const filteredReviews = useMemo(() => {
         if (!reviews) return [];
-        let result = [...reviews];
+        let result = [...reviews]; // already sorted by sort_order from API
 
         // Filter
         if (searchQuery) {
@@ -74,15 +73,35 @@ export default function AdminReviews() {
             );
         }
 
-        // Sort
-        result.sort((a, b) => {
-            const dateA = new Date(a.date).getTime();
-            const dateB = new Date(b.date).getTime();
-            return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
-        });
-
         return result;
-    }, [reviews, searchQuery, sortOrder]);
+    }, [reviews, searchQuery]);
+
+    const moveMutation = useMutation({
+        mutationFn: ({ idA, orderA, idB, orderB }: { idA: string; orderA: number; idB: string; orderB: number }) =>
+            swapReviewOrder(idA, orderA, idB, orderB),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["reviews"] });
+        },
+        onError: () => {
+            toast.error("Ошибка при перемещении");
+        }
+    });
+
+    const handleMove = (index: number, direction: "up" | "down") => {
+        if (!reviews) return;
+        const targetIndex = direction === "up" ? index - 1 : index + 1;
+        if (targetIndex < 0 || targetIndex >= reviews.length) return;
+
+        const current = reviews[index];
+        const target = reviews[targetIndex];
+
+        moveMutation.mutate({
+            idA: current.id,
+            orderA: current.sortOrder ?? index,
+            idB: target.id,
+            orderB: target.sortOrder ?? targetIndex,
+        });
+    };
 
     return (
         <div className="space-y-6">
@@ -114,14 +133,6 @@ export default function AdminReviews() {
                                     className="pl-8 sm:w-[300px]"
                                 />
                             </div>
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() => setSortOrder(prev => prev === "newest" ? "oldest" : "newest")}
-                                title="Изменить сортировку по дате"
-                            >
-                                <ArrowUpDown className="h-4 w-4" />
-                            </Button>
                         </div>
                     </div>
                 </CardHeader>
@@ -130,6 +141,7 @@ export default function AdminReviews() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
+                                    <TableHead className="w-[60px]">Порядок</TableHead>
                                     <TableHead className="w-[80px]">Обложка</TableHead>
                                     <TableHead>Книга / Автор</TableHead>
                                     <TableHead className="hidden md:table-cell">Дата</TableHead>
@@ -140,25 +152,50 @@ export default function AdminReviews() {
                             <TableBody>
                                 {isLoading ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="h-24 text-center">
+                                        <TableCell colSpan={6} className="h-24 text-center">
                                             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground mx-auto" />
                                         </TableCell>
                                     </TableRow>
                                 ) : isError ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="h-24 text-center text-destructive">
+                                        <TableCell colSpan={6} className="h-24 text-center text-destructive">
                                             Ошибка при загрузке рецензий.
                                         </TableCell>
                                     </TableRow>
-                                ) : filteredAndSortedReviews.length === 0 ? (
+                                ) : filteredReviews.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="h-24 text-center">
+                                        <TableCell colSpan={6} className="h-24 text-center">
                                             Ничего не найдено.
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    filteredAndSortedReviews.map((review) => (
+                                    filteredReviews.map((review, index) => (
                                         <TableRow key={review.id}>
+                                            <TableCell>
+                                                <div className="flex flex-col items-center gap-0.5">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-6 w-6"
+                                                        disabled={index === 0 || moveMutation.isPending || !!searchQuery}
+                                                        onClick={() => handleMove(index, "up")}
+                                                        title="Поднять"
+                                                    >
+                                                        <ChevronUp className="h-4 w-4" />
+                                                    </Button>
+                                                    <span className="text-xs text-muted-foreground">{index + 1}</span>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-6 w-6"
+                                                        disabled={index === filteredReviews.length - 1 || moveMutation.isPending || !!searchQuery}
+                                                        onClick={() => handleMove(index, "down")}
+                                                        title="Опустить"
+                                                    >
+                                                        <ChevronDown className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
                                             <TableCell>
                                                 <img
                                                     src={review.coverUrl}

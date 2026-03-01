@@ -59,60 +59,61 @@ export type Database = {
           id?: string
           role?: "admin" | "user" | null
         }
+        Relationships: []
       }
-      Relationships: []
+      reviews: {
+        Row: {
+          id: string
+          title: string
+          author: string
+          cover_url: string
+          rating: number
+          date: string
+          text: string
+          quote: string | null
+          created_at: string
+          sort_order: number
+        }
+        Insert: {
+          id?: string
+          title: string
+          author: string
+          cover_url: string
+          rating: number
+          date: string
+          text: string
+          quote?: string | null
+          created_at?: string
+          sort_order?: number
+        }
+        Update: {
+          id?: string
+          title?: string
+          author?: string
+          cover_url?: string
+          rating?: number
+          date?: string
+          text?: string
+          quote?: string | null
+          created_at?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
     }
-    reviews: {
-      Row: {
-        id: string
-        title: string
-        author: string
-        cover_url: string
-        rating: number
-        date: string
-        text: string
-        quote: string | null
-        created_at: string
-      }
-      Insert: {
-        id?: string
-        title: string
-        author: string
-        cover_url: string
-        rating: number
-        date: string
-        text: string
-        quote?: string | null
-        created_at?: string
-      }
-      Update: {
-        id?: string
-        title?: string
-        author?: string
-        cover_url?: string
-        rating?: number
-        date?: string
-        text?: string
-        quote?: string | null
-        created_at?: string
-      }
-      Relationships: []
-      Relationships: []
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
     }
   }
-  Views: {
-    [_ in never]: never
-  }
-  Functions: {
-    [_ in never]: never
-  }
-  Enums: {
-    [_ in never]: never
-  }
-  CompositeTypes: {
-    [_ in never]: never
-  }
-}
 }
 
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
