@@ -26,7 +26,7 @@ import { toast } from "sonner";
 const reviewSchema = z.object({
     title: z.string().min(2, "Название должно содержать минимум 2 символа"),
     author: z.string().min(2, "Имя автора должно содержать минимум 2 символа"),
-    coverUrl: z.string().min(1, "Укажите ссылку на изображение или загрузите файл"),
+    coverUrl: z.string().min(1, "Пожалуйста, загрузите обложку с устройства"),
     rating: z.coerce.number().min(1).max(5),
     date: z.string().min(10, "Выберите дату"),
     text: z.string().min(10, "Текст рецензии слишком короткий"),
@@ -113,7 +113,13 @@ export default function AdminReviewForm() {
                     return; // Stop form submission if upload fails
                 }
             } else if (!finalCoverUrl) {
-                toast.error("Пожалуйста, выберите обложку или укажите ссылку");
+                toast.error("Пожалуйста, выберите обложку для загрузки");
+                setIsUploading(false);
+                return;
+            }
+
+            if (finalCoverUrl.startsWith("blob:")) {
+                toast.error("Внутренняя ошибка: невозможно сохранить временную ссылку обложки. Попробуйте удалить и прикрепить файл заново.");
                 setIsUploading(false);
                 return;
             }
@@ -218,7 +224,7 @@ export default function AdminReviewForm() {
                                         name="coverUrl"
                                         render={({ field }) => (
                                             <FormItem className="col-span-1 md:col-span-2">
-                                                <FormLabel>Обложка книги (загрузка файла или URL)</FormLabel>
+                                                <FormLabel>Обложка книги</FormLabel>
                                                 <div className="flex flex-col gap-4">
                                                     {previewUrl ? (
                                                         <div className="relative w-32 h-44 rounded-md overflow-hidden border border-border group">
@@ -239,41 +245,17 @@ export default function AdminReviewForm() {
                                                                     <p className="mb-2 text-sm text-muted-foreground"><span className="font-semibold">Нажмите для загрузки</span> или перетащите файл</p>
                                                                     <p className="text-xs text-muted-foreground/70">PNG, JPG или WEBP (макс. 5MB)</p>
                                                                 </div>
-                                                                <input
-                                                                    id="dropzone-file"
-                                                                    type="file"
-                                                                    accept="image/*"
-                                                                    className="hidden"
-                                                                    ref={fileInputRef}
-                                                                    onChange={handleFileChange}
-                                                                />
                                                             </label>
                                                         </div>
                                                     )}
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="h-px bg-border flex-1"></div>
-                                                        <span className="text-xs text-muted-foreground uppercase">Или вставьте ссылку</span>
-                                                        <div className="h-px bg-border flex-1"></div>
-                                                    </div>
-                                                    <FormControl>
-                                                        <div className="relative">
-                                                            <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                                            <Input
-                                                                placeholder="https://example.com/image.jpg"
-                                                                type="url"
-                                                                className="pl-9"
-                                                                {...field}
-                                                                onChange={(e) => {
-                                                                    field.onChange(e);
-                                                                    if (e.target.value && !fileInputRef.current?.files?.length) {
-                                                                        setPreviewUrl(e.target.value);
-                                                                    } else if (!e.target.value && !fileInputRef.current?.files?.length) {
-                                                                        setPreviewUrl(null);
-                                                                    }
-                                                                }}
-                                                            />
-                                                        </div>
-                                                    </FormControl>
+                                                    <input
+                                                        id="dropzone-file"
+                                                        type="file"
+                                                        accept="image/*"
+                                                        className="hidden"
+                                                        ref={fileInputRef}
+                                                        onChange={handleFileChange}
+                                                    />
                                                 </div>
                                                 <FormMessage />
                                             </FormItem>
