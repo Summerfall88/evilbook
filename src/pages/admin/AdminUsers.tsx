@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
     Table,
@@ -38,19 +39,37 @@ export default function AdminUsers() {
     const queryClient = useQueryClient();
     const { currentUser } = useAuth();
 
-    // Загружаем список профилей
-    const { data: profiles, isLoading, isError } = useQuery({
+    // Загружаем список профилей страницами по 10
+    const {
+        data,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        isLoading,
+        isError
+    } = useInfiniteQuery({
         queryKey: ["admin", "profiles"],
-        queryFn: async () => {
-            const { data, error } = await supabase
+        queryFn: async ({ pageParam = 0 }) => {
+            const PAGE_SIZE = 10;
+            const from = pageParam * PAGE_SIZE;
+            const to = from + PAGE_SIZE - 1;
+
+            const { data: profilesData, error } = await supabase
                 .from("profiles")
                 .select("id, display_name, role, created_at")
-                .order("created_at", { ascending: false });
+                .order("created_at", { ascending: false })
+                .range(from, to);
 
             if (error) throw error;
-            return data as Profile[];
+            return profilesData as Profile[];
+        },
+        initialPageParam: 0,
+        getNextPageParam: (lastPage, allPages) => {
+            return lastPage.length === 10 ? allPages.length : undefined;
         },
     });
+
+    const profiles = data?.pages.flat() || [];
 
     // Мутация для смены роли
     const roleMutation = useMutation({
@@ -219,6 +238,24 @@ export default function AdminUsers() {
                                 )}
                             </TableBody>
                         </Table>
+                        {hasNextPage && (
+                            <div className="flex justify-center p-4 border-t">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => fetchNextPage()}
+                                    disabled={isFetchingNextPage}
+                                >
+                                    {isFetchingNextPage ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            Загрузка...
+                                        </>
+                                    ) : (
+                                        "Показать еще 10 пользователей"
+                                    )}
+                                </Button>
+                            </div>
+                        )}
                     </div>
                 </CardContent>
             </Card>
