@@ -40,38 +40,62 @@ export const CommentInput = ({
         if (!content.trim()) return;
         setSubmitting(true);
 
-        const { data: insertData, error: insertError } = await supabase
-            .from("comments")
-            .insert({
-                review_id: reviewId,
-                user_id: userId,
-                content: content.trim(),
-                parent_id: parentId,
-            })
-            .select("*")
-            .single();
+        try {
+            // Сначала проверяем комментарий через нашу Edge Function (OpenAI Moderation)
+            const { data: modData, error: modError } = await supabase.functions.invoke('moderate-comment', {
+                body: { text: content.trim() }
+            });
 
-        if (insertError) {
-            console.error("Error inserting comment:", insertError);
-            toast.error("Не удалось отправить комментарий");
-        } else {
-            // Fetch profile separately for the new comment
-            const { data: profileData, error: profileError } = await supabase
-                .from("profiles")
-                .select("display_name")
-                .eq("id", userId)
-                .single();
-
-            if (profileError) {
-                console.error("Error fetching profile for new comment:", profileError);
+            if (modError) {
+                console.error("Moderation error:", modError);
+                toast.error("Ошибка при проверке комментария. Сервис временно недоступен.");
+                setSubmitting(false);
+                return;
             }
 
-            setContent("");
-            const newComment = {
-                ...insertData,
-                profile: profileData || { display_name: "Пользователь" },
-            };
-            onCommentPosted(newComment);
+            if (modData && modData.flagged) {
+                toast.error("Ваш комментарий нарушает правила сообщества и был отклонен модератором.");
+                setSubmitting(false);
+                return;
+            }
+
+            // Если тест пройден, сохраняем комментарий в базу
+            const { data: insertData, error: insertError } = await supabase
+                .from("comments")
+                .insert({
+                    review_id: reviewId,
+                    user_id: userId,
+                    content: content.trim(),
+                    parent_id: parentId,
+                })
+                .select("*")
+                .single();
+
+            if (insertError) {
+                console.error("Error inserting comment:", insertError);
+                toast.error("Не удалось отправить комментарий");
+            } else {
+                // Fetch profile separately for the new comment
+                const { data: profileData, error: profileError } = await supabase
+                    .from("profiles")
+                    .select("display_name")
+                    .eq("id", userId)
+                    .single();
+
+                if (profileError) {
+                    console.error("Error fetching profile for new comment:", profileError);
+                }
+
+                setContent("");
+                const newComment = {
+                    ...insertData,
+                    profile: profileData || { display_name: "Пользователь" },
+                };
+                onCommentPosted(newComment);
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error("Что-то пошло не так при отправке");
         }
         setSubmitting(false);
     };
