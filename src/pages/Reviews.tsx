@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Search, Loader2 } from "lucide-react";
+import { Plus, Search, Loader2, ArrowDownUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ReviewCard from "@/components/ReviewCard";
@@ -7,9 +7,20 @@ import ReviewDialog from "@/components/ReviewDialog";
 import { getReviews, saveReview, deleteReview, type Review } from "@/data/reviews";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+type SortOption = "latest" | "discussed" | "recommended";
 
 const Reviews = () => {
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("latest");
   const [visibleCount, setVisibleCount] = useState(10);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingReview, setEditingReview] = useState<Review | null>(null);
@@ -34,13 +45,82 @@ const Reviews = () => {
     },
   });
 
+  // Загружаем статистику по всем комментариям для сортировки
+  const { data: commentsStats } = useQuery({
+    queryKey: ["comments_stats"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("comments")
+        .select("review_id, created_at");
+      if (error) {
+        console.error("Error fetching comments stats", error);
+        return [];
+      }
+      return data;
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
   const filtered = useMemo(() => {
     if (!reviews) return [];
+
+    // 1. Фильтрация по поиску
     const q = search.toLowerCase().trim();
-    // Already sorted by sort_order from API
-    if (!q) return reviews;
-    return reviews.filter(r => r.title.toLowerCase().includes(q) || r.author.toLowerCase().includes(q));
-  }, [reviews, search]);
+    let result = [...reviews];
+    if (q) {
+      result = result.filter(r => r.title.toLowerCase().includes(q) || r.author.toLowerCase().includes(q));
+    }
+
+    // 2. Сортировка
+    if (sortBy === "latest") {
+      // Изначально они уже отсортированы по sort_order из getReviews
+      // Ничего не делаем, либо можно дополнительно сортировать по дате создания, если нужно
+      return result;
+    }
+
+    // Подсчитываем статистику для 'discussed' и 'recommended'
+    const now = new Date();
+    const threeDaysAgo = new Date(now.getTime() - (3 * 24 * 60 * 60 * 1000));
+
+    const statsMap = new Map<string, { total: number; recent: number }>();
+    if (commentsStats) {
+      commentsStats.forEach(c => {
+        const isRecent = new Date(c.created_at) >= threeDaysAgo;
+        const current = statsMap.get(c.review_id) || { total: 0, recent: 0 };
+        current.total += 1;
+        if (isRecent) current.recent += 1;
+        statsMap.set(c.review_id, current);
+      });
+    }
+
+    result.sort((a, b) => {
+      const statsA = statsMap.get(a.id) || { total: 0, recent: 0 };
+      const statsB = statsMap.get(b.id) || { total: 0, recent: 0 };
+
+      if (sortBy === "discussed") {
+        // Сортировка по общему количеству комментариев (по убыванию)
+        if (statsB.total !== statsA.total) {
+          return statsB.total - statsA.total;
+        }
+      } else if (sortBy === "recommended") {
+        // Сортировка по количеству комментариев за последние 3 дня (по убыванию)
+        if (statsB.recent !== statsA.recent) {
+          return statsB.recent - statsA.recent;
+        }
+        // Вторичная сортировка по общему количеству
+        if (statsB.total !== statsA.total) {
+          return statsB.total - statsA.total;
+        }
+      }
+
+      // Fallback: сохраняем оригинальный порядок getReviews (sort_order)
+      const orderA = a.sortOrder || 0;
+      const orderB = b.sortOrder || 0;
+      return orderA - orderB;
+    });
+
+    return result;
+  }, [reviews, search, sortBy, commentsStats]);
 
   const displayedReviews = filtered.slice(0, visibleCount);
   const hasMore = visibleCount < filtered.length;
@@ -91,10 +171,31 @@ const Reviews = () => {
           </Button>}
         </div>
 
-        {/* Search */}
-        <div className="relative max-w-md mb-10">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input value={search} onChange={handleSearchChange} placeholder="Поиск по названию или автору..." className="pl-10 bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50" />
+        {/* Search & Filter Options */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-10 items-stretch sm:items-center">
+          <div className="relative flex-1 max-w-md">
+            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input value={search} onChange={handleSearchChange} placeholder="Поиск по названию или автору..." className="pl-10 bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50 w-full" />
+          </div>
+
+          <div className="w-full sm:w-[200px]">
+            <Select
+              value={sortBy}
+              onValueChange={(val: SortOption) => { setSortBy(val); setVisibleCount(10); }}
+            >
+              <SelectTrigger className="w-full bg-card border-border/50">
+                <div className="flex items-center gap-2">
+                  <ArrowDownUp size={14} className="text-muted-foreground" />
+                  <SelectValue placeholder="Сортировка" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="latest">Последние</SelectItem>
+                <SelectItem value="discussed">Обсуждаемые</SelectItem>
+                <SelectItem value="recommended">Рекомендуемые</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {isLoading ? (
