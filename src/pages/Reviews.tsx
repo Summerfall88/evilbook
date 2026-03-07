@@ -10,6 +10,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const Reviews = () => {
   const [search, setSearch] = useState("");
+  const [visibleCount, setVisibleCount] = useState(10);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingReview, setEditingReview] = useState<Review | null>(null);
   const isAdmin = useAdmin();
@@ -40,6 +41,14 @@ const Reviews = () => {
     if (!q) return reviews;
     return reviews.filter(r => r.title.toLowerCase().includes(q) || r.author.toLowerCase().includes(q));
   }, [reviews, search]);
+
+  const displayedReviews = filtered.slice(0, visibleCount);
+  const hasMore = visibleCount < filtered.length;
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+    setVisibleCount(10);
+  };
 
   const saveMutation = useMutation({
     mutationFn: saveReview,
@@ -85,7 +94,7 @@ const Reviews = () => {
         {/* Search */}
         <div className="relative max-w-md mb-10">
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Поиск по названию или автору..." className="pl-10 bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50" />
+          <Input value={search} onChange={handleSearchChange} placeholder="Поиск по названию или автору..." className="pl-10 bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50" />
         </div>
 
         {isLoading ? (
@@ -102,13 +111,28 @@ const Reviews = () => {
             Ничего не найдено
           </p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filtered.map((review) => <div key={review.id}>
-              <ReviewCard review={review} onEdit={isAdmin ? () => {
-                setEditingReview(review);
-                setDialogOpen(true);
-              } : undefined} />
-            </div>)}
+          <div className="space-y-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {displayedReviews.map((review) => <div key={review.id}>
+                <ReviewCard review={review} onEdit={isAdmin ? () => {
+                  setEditingReview(review);
+                  setDialogOpen(true);
+                } : undefined} />
+              </div>)}
+            </div>
+
+            {hasMore && (
+              <div className="flex justify-center mt-10">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => setVisibleCount(prev => prev + 10)}
+                  className="font-medium px-8"
+                >
+                  Показать еще 10 рецензий
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </section>
