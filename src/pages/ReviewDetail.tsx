@@ -8,6 +8,31 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 
+// Утилита для рендера ссылок в тексте
+const renderTextWithLinks = (text: string) => {
+  // Ищем форматы [текст](http...) или просто http...
+  const regex = /(\[.+?\]\(https?:\/\/[^\s\)]+\)|https?:\/\/[^\s\)]+)/g;
+
+  return text.split(regex).map((part, i) => {
+    const mdMatch = part.match(/^\[(.+?)\]\((https?:\/\/[^\s\)]+)\)$/);
+    if (mdMatch) {
+      return (
+        <a key={i} href={mdMatch[2]} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 hover:underline">
+          {mdMatch[1]}
+        </a>
+      );
+    }
+    if (part.match(/^https?:\/\/[^\s\)]+$/)) {
+      return (
+        <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 hover:underline break-all">
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+};
+
 const ReviewDetail = () => {
   const { id } = useParams<{ id: string }>();
   const commentsRef = useRef<HTMLDivElement>(null);
@@ -110,8 +135,8 @@ const ReviewDetail = () => {
           </div>
 
           <div className="border-t border-border/30 pt-8">
-            <p className="font-body text-base sm:text-lg leading-relaxed text-secondary-foreground whitespace-pre-line break-words">
-              {review.text}
+            <p className="font-body text-base sm:text-lg leading-relaxed text-secondary-foreground whitespace-pre-wrap break-words">
+              {renderTextWithLinks(review.text)}
             </p>
           </div>
 
