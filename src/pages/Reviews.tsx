@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Plus, Search, Loader2, ArrowDownUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,9 +19,18 @@ import {
 type SortOption = "latest" | "discussed" | "recommended";
 
 const Reviews = () => {
-  const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState<SortOption>("latest");
-  const [visibleCount, setVisibleCount] = useState(10);
+  const [search, setSearch] = useState(() => sessionStorage.getItem("evilbook-search") || "");
+  const [sortBy, setSortBy] = useState<SortOption>(() => (sessionStorage.getItem("evilbook-sort") as SortOption) || "latest");
+  const [visibleCount, setVisibleCount] = useState(() => {
+    const saved = sessionStorage.getItem("evilbook-count");
+    return saved ? parseInt(saved, 10) : 10;
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem("evilbook-search", search);
+    sessionStorage.setItem("evilbook-sort", sortBy);
+    sessionStorage.setItem("evilbook-count", visibleCount.toString());
+  }, [search, sortBy, visibleCount]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingReview, setEditingReview] = useState<Review | null>(null);
   const isAdmin = useAdmin();
