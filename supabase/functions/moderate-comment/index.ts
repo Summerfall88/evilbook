@@ -46,9 +46,44 @@ serve(async (req) => {
         }
 
         // The moderation API returns a results array
-        const flagged = data.results && data.results[0] && data.results[0].flagged;
+        const result = data.results && data.results[0];
 
-        if (flagged) {
+        if (!result) {
+            return new Response(JSON.stringify({ flagged: false }), {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                status: 200,
+            })
+        }
+
+        // Строгие пороги чувствительности (чем меньше значение, тем строже фильтр)
+        const strictThresholds: Record<string, number> = {
+            'harassment': 0.1,
+            'harassment/threatening': 0.1,
+            'hate': 0.1,
+            'hate/threatening': 0.1,
+            'self-harm': 0.1,
+            'self-harm/intent': 0.1,
+            'self-harm/instructions': 0.1,
+            'sexual': 0.3,
+            'sexual/minors': 0.1,
+            'violence': 0.2,
+            'violence/graphic': 0.2
+        };
+
+        let isFlagged = result.flagged; // Оставляем базовый флаг OpenAI как страховку
+
+        // Проверяем каждую категорию по нашим строгим порогам
+        if (!isFlagged && result.category_scores) {
+            for (const [category, score] of Object.entries(result.category_scores)) {
+                if (strictThresholds[category] !== undefined && (score as number) > strictThresholds[category]) {
+                    isFlagged = true;
+                    console.log(`Blocked by custom threshold: ${category} (Score: ${score} > Threshold: ${strictThresholds[category]})`);
+                    break;
+                }
+            }
+        }
+
+        if (isFlagged) {
             // Toxic or spam comment
             return new Response(JSON.stringify({ flagged: true, message: "Comment contains inappropriate content" }), {
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
