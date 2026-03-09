@@ -99,7 +99,7 @@ const AuthDialog = ({ trigger, open, onOpenChange }: AuthDialogProps) => {
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md" onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle className="font-display font-bold">
               {mode === "login" ? "Вход" : mode === "register" ? "Регистрация" : "Восстановление пароля"}
