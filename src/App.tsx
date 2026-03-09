@@ -52,7 +52,7 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter basename="/evilbook/">
+        <BrowserRouter>
           <AuthProvider>
             <ScrollToTop />
             <Header />
