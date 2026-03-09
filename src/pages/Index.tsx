@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SocialLinks from "@/components/SocialLinks";
+import Footer from "@/components/Footer";
 import ReviewCard from "@/components/ReviewCard";
 import ReviewDialog from "@/components/ReviewDialog";
 import { getReviews, saveReview, deleteReview, type Review } from "@/data/reviews";
@@ -115,6 +116,7 @@ const Index = () => {
       </section>
 
       {isAdmin && <ReviewDialog open={dialogOpen} onClose={() => setDialogOpen(false)} review={editingReview} onSave={handleSave} onDelete={handleDelete} />}
+      <Footer />
     </div>
   );
 };
