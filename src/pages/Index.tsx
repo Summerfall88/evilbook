@@ -22,7 +22,7 @@ const Index = () => {
     queryFn: getReviews,
   });
 
-  const latestReviews = reviews ? [...reviews].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 6) : [];
+  const latestReviews = reviews ? [...reviews].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 4) : [];
 
   const saveMutation = useMutation({
     mutationFn: saveReview,
@@ -105,7 +105,7 @@ const Index = () => {
             Пока нет ни одной рецензии
           </p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {latestReviews.map((review) => (
               <div key={review.id}>
                 <ReviewCard review={review} onEdit={isAdmin ? () => openEdit(review) : undefined} />
