@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
+import { Bookmark } from "lucide-react";
 import { getReviewById, Review } from "@/data/reviews";
 import StarRating from "./StarRating";
 interface ReviewCardProps {
@@ -10,6 +12,7 @@ const ReviewCard = ({
   review,
   onEdit
 }: ReviewCardProps) => {
+  const [isFavorite, setIsFavorite] = useState(false);
   const formattedDate = new Date(review.date).toLocaleDateString("ru-RU", {
     day: "numeric",
     month: "long",
@@ -23,6 +26,12 @@ const ReviewCard = ({
       queryFn: () => getReviewById(review.id),
       staleTime: 1000 * 60 * 5, // 5 minutes
     });
+  };
+
+  const toggleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsFavorite(!isFavorite);
   };
 
   return <article className="group bg-card border border-border/50 rounded-lg overflow-hidden transition-all duration-300 hover:border-gold/30 hover:shadow-[0_0_30px_-10px_hsl(42,60%,55%,0.15)] relative">
@@ -45,10 +54,23 @@ const ReviewCard = ({
         </p>
       </div>
     </Link>
+
+    <button
+      onClick={toggleFavorite}
+      className="absolute top-3 right-3 z-10 p-2 rounded-full bg-background/40 backdrop-blur-md border border-white/10 transition-all duration-300 hover:scale-110 active:scale-95 group/bookmark"
+      title={isFavorite ? "Удалить из избранного" : "Добавить в избранное"}
+    >
+      <Bookmark
+        size={20}
+        className={`transition-colors duration-300 ${isFavorite ? "fill-red-500 text-red-500" : "text-white/70 group-hover/bookmark:text-white"}`}
+      />
+    </button>
+
     {onEdit && <button onClick={e => {
       e.preventDefault();
+      e.stopPropagation();
       onEdit();
-    }} className="absolute top-2 right-2 bg-card/80 backdrop-blur-sm border border-border/50 text-gold rounded-md px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity hover:bg-card">
+    }} className="absolute top-3 left-3 z-10 bg-card/80 backdrop-blur-sm border border-border/50 text-gold rounded-md px-2 py-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity hover:bg-card">
       Редактировать
     </button>}
   </article>;
