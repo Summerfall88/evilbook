@@ -165,13 +165,8 @@ const Reviews = () => {
 
   return (
     <div>
-      <section className="container mx-auto px-4 py-12">
-        <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-10">
-          <div>
-            <h1 className="font-display text-4xl font-bold text-foreground">
-              Все рецензии
-            </h1>
-          </div>
+      <section className="container mx-auto px-4 pt-4 pb-12">
+        <div className="flex flex-col sm:flex-row items-start sm:items-end justify-end gap-4 mb-4">
           {isAdmin && <Button onClick={() => {
             setEditingReview(null);
             setDialogOpen(true);
@@ -181,7 +176,7 @@ const Reviews = () => {
         </div>
 
         {/* Search & Filter Options */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-10 items-stretch sm:items-center">
+        <div className="flex flex-col sm:flex-row gap-4 mb-8 items-stretch sm:items-center">
           <div className="relative flex-1 max-w-md">
             <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input value={search} onChange={handleSearchChange} placeholder="Поиск по названию или автору..." className="pl-10 bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50 w-full" />
