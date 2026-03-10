@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, MessageCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, MessageCircle, Loader2, Bookmark } from "lucide-react";
 import { getReviewById } from "@/data/reviews";
 import StarRating from "@/components/StarRating";
 import CommentsSection from "@/components/CommentsSection";
@@ -36,6 +36,7 @@ const renderTextWithLinks = (text: string) => {
 const ReviewDetail = () => {
   const { id } = useParams<{ id: string }>();
   const commentsRef = useRef<HTMLDivElement>(null);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   const { data: review, isLoading, isError } = useQuery({
     queryKey: ["review", id],
@@ -95,6 +96,12 @@ const ReviewDetail = () => {
     year: "numeric",
   });
 
+  const toggleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsFavorite(!isFavorite);
+  };
+
   return (
     <div className="grow">
       <section className="container mx-auto px-4 py-8 max-w-3xl">
@@ -108,12 +115,22 @@ const ReviewDetail = () => {
         <article className="space-y-8">
           <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
             <div className="w-48 sm:w-56 flex-shrink-0 mx-auto sm:mx-0">
-              <div className="aspect-[2/3] rounded-lg overflow-hidden border border-border/50 shadow-lg">
+              <div className="aspect-[2/3] rounded-lg overflow-hidden border border-border/50 shadow-lg relative group">
                 <img
                   src={review.coverUrl}
                   alt={review.title}
                   className="w-full h-full object-cover"
                 />
+                <button
+                  onClick={toggleFavorite}
+                  className="absolute top-3 right-3 z-10 p-2 rounded-full bg-background/40 backdrop-blur-md border border-white/10 transition-all duration-300 hover:scale-110 active:scale-95"
+                  title={isFavorite ? "Удалить из избранного" : "Добавить в избранное"}
+                >
+                  <Bookmark
+                    size={20}
+                    className={`transition-colors duration-300 ${isFavorite ? "fill-red-500 text-red-500" : "text-white/70 hover:text-white"}`}
+                  />
+                </button>
               </div>
             </div>
 
