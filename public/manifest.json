@@ -1,0 +1,21 @@
+{
+    "name": "Evilbook",
+    "short_name": "Evilbook",
+    "description": "Книжный блог Кристины: честные рецензии на книги, тёмные истории и художественное вдохновение.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#ce6355",
+    "icons": [
+        {
+            "src": "/favicon.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/favicon1.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
