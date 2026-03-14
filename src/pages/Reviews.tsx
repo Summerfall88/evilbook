@@ -168,7 +168,7 @@ const Reviews = () => {
 
   return (
     <div>
-      <section className="container mx-auto px-4 pt-4 pb-12">
+      <section className="container mx-auto px-4 pt-0 pb-12">
         <div className="flex flex-col sm:flex-row items-start sm:items-end justify-end gap-4 mb-4">
           {isAdmin && <Button onClick={() => {
             setEditingReview(null);
@@ -179,34 +179,34 @@ const Reviews = () => {
         </div>
 
         {/* Filter Options */}
-        <div className="flex justify-center mb-8">
+        <div className="flex justify-start pt-4 mb-6">
           <div className="w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0 hide-scrollbar">
             <div className="flex items-center gap-2 min-w-max">
               <Button
                 variant={sortBy === "favorites" ? "default" : "outline"}
                 onClick={() => { setSortBy("favorites"); setVisibleCount(10); }}
-                className={`font-body px-4 py-2 h-10 ${sortBy === "favorites" ? "bg-[#ce6355] text-white hover:bg-[#ce6355]/90 border-transparent transition-all duration-300" : "border-border/50 text-foreground hover:border-gold hover:text-gold"}`}
+                className={`font-body px-3 h-7 text-[13px] ${sortBy === "favorites" ? "bg-[#ce6355] text-white hover:bg-[#ce6355]/90 border-transparent transition-all duration-300" : "border-border/50 text-foreground hover:border-gold hover:text-gold"}`}
               >
                 Избранное
               </Button>
               <Button
                 variant={sortBy === "latest" ? "default" : "outline"}
                 onClick={() => { setSortBy("latest"); setVisibleCount(10); }}
-                className={`font-body px-4 py-2 h-10 ${sortBy === "latest" ? "bg-[#ce6355] text-white hover:bg-[#ce6355]/90 border-transparent transition-all duration-300" : "border-border/50 text-foreground hover:border-gold hover:text-gold"}`}
+                className={`font-body px-3 h-7 text-[13px] ${sortBy === "latest" ? "bg-[#ce6355] text-white hover:bg-[#ce6355]/90 border-transparent transition-all duration-300" : "border-border/50 text-foreground hover:border-gold hover:text-gold"}`}
               >
                 Последние
               </Button>
               <Button
                 variant={sortBy === "discussed" ? "default" : "outline"}
                 onClick={() => { setSortBy("discussed"); setVisibleCount(10); }}
-                className={`font-body px-4 py-2 h-10 ${sortBy === "discussed" ? "bg-[#ce6355] text-white hover:bg-[#ce6355]/90 border-transparent transition-all duration-300" : "border-border/50 text-foreground hover:border-gold hover:text-gold"}`}
+                className={`font-body px-3 h-7 text-[13px] ${sortBy === "discussed" ? "bg-[#ce6355] text-white hover:bg-[#ce6355]/90 border-transparent transition-all duration-300" : "border-border/50 text-foreground hover:border-gold hover:text-gold"}`}
               >
                 Обсуждаемые
               </Button>
               <Button
                 variant={sortBy === "recommended" ? "default" : "outline"}
                 onClick={() => { setSortBy("recommended"); setVisibleCount(10); }}
-                className={`font-body px-4 py-2 h-10 ${sortBy === "recommended" ? "bg-[#ce6355] text-white hover:bg-[#ce6355]/90 border-transparent transition-all duration-300" : "border-border/50 text-foreground hover:border-gold hover:text-gold"}`}
+                className={`font-body px-3 h-7 text-[13px] ${sortBy === "recommended" ? "bg-[#ce6355] text-white hover:bg-[#ce6355]/90 border-transparent transition-all duration-300" : "border-border/50 text-foreground hover:border-gold hover:text-gold"}`}
               >
                 Рекомендуемые
               </Button>
