@@ -167,7 +167,11 @@ const Header = () => {
 
       {/* Navigation menu sheet */}
       <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-        <SheetContent side="right" className="w-72">
+        <SheetContent
+          side="right"
+          className="w-72"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
           <SheetHeader>
             <SheetTitle className="font-display font-bold">Меню</SheetTitle>
             <SheetDescription className="sr-only">Навигация по сайту</SheetDescription>

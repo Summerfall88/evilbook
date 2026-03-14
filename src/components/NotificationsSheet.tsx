@@ -102,7 +102,11 @@ export default function NotificationsSheet({ open, onOpenChange }: Notifications
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent side="right" className="w-full sm:w-[400px] p-0 flex flex-col">
+            <SheetContent
+                side="right"
+                className="w-full sm:w-[400px] p-0 flex flex-col"
+                onOpenAutoFocus={(e) => e.preventDefault()}
+            >
                 <SheetHeader className="p-6 border-b border-border/50">
                     <SheetTitle className="font-display text-xl">Уведомления</SheetTitle>
                 </SheetHeader>

@@ -77,7 +77,11 @@ const UserProfileSheet = ({ open, onOpenChange }: UserProfileSheetProps) => {
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="right" className="w-80 sm:w-96">
+        <SheetContent
+          side="right"
+          className="w-80 sm:w-96"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
           <SheetHeader>
             <SheetTitle className="font-display font-bold">Личный кабинет</SheetTitle>
             <SheetDescription>Управление аккаунтом</SheetDescription>
