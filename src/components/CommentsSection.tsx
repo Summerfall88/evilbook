@@ -119,11 +119,15 @@ const CommentsSection = ({
     fetchRootComments(0, true);
   };
 
-  const handleDeleteRoot = (id: string) => {
+  const handleDeleteRoot = async (id: string) => {
     // Optimistic delete from list
     setComments(prev => prev.filter(c => c.id !== id));
     // Also call API
-    supabase.from("comments").delete().eq("id", id).then();
+    const { error } = await supabase.from("comments").delete().eq("id", id);
+    if (error) {
+      console.error("Error deleting comment:", error);
+      // Optional: re-fetch if delete failed, but for now just log
+    }
   };
 
   return (

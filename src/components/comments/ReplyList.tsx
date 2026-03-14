@@ -189,7 +189,11 @@ export const ReplyList = ({
                                             </button>
                                             {(userId === reply.user_id || role === 'admin' || isAdmin) && (
                                                 <button
-                                                    onClick={() => onDelete(reply.id)}
+                                                    onClick={() => {
+                                                        onDelete(reply.id);
+                                                        setReplies(prev => prev.filter(r => r.id !== reply.id));
+                                                        setReplyCount(prev => Math.max(0, prev - 1));
+                                                    }}
                                                     className="text-xs text-destructive hover:text-destructive/80 transition-colors opacity-0 group-hover:opacity-100"
                                                 >
                                                     Удалить
