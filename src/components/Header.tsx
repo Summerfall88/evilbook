@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,10 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 
+  // Pull-to-refresh logic
+  const touchStartY = useRef<number | null>(null);
+  const PULL_THRESHOLD = 80; // pixels to pull before refreshing
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -38,8 +42,41 @@ const Header = () => {
     }
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    // Only register pull if we are at the top of the page (or since header is fixed, just register it)
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartY.current === null) return;
+    const touchCurrentY = e.touches[0].clientY;
+    const deltaY = touchCurrentY - touchStartY.current;
+
+    // Optional: add visual feedback here (transform) if desired.
+    // For now, keeping it invisible as requested.
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartY.current === null) return;
+    const touchEndY = e.changedTouches[0].clientY;
+    const deltaY = touchEndY - touchStartY.current;
+
+    if (deltaY > PULL_THRESHOLD) {
+      // Trigger refresh
+      window.location.reload();
+    }
+
+    // Reset
+    touchStartY.current = null;
+  };
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 bg-background/95 border-b border-border/50 backdrop-blur-sm">
+    <header
+      className="fixed top-0 left-0 right-0 z-40 bg-background/95 border-b border-border/50 backdrop-blur-sm"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       <div className="container mx-auto flex items-center justify-between py-4 px-4 h-[72px]">
         {/* Left: Search Icon */}
         <div className="flex-1 flex justify-start">
