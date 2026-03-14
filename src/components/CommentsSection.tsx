@@ -18,11 +18,17 @@ interface Comment {
 
 interface CommentsSectionProps {
   reviewId: string;
+  scrollToCommentId?: string;
+  targetCommentParentId?: string | null;
 }
 
 const PAGE_SIZE = 10;
 
-const CommentsSection = ({ reviewId }: CommentsSectionProps) => {
+const CommentsSection = ({
+  reviewId,
+  scrollToCommentId,
+  targetCommentParentId
+}: CommentsSectionProps) => {
   const { user, loading } = useAuth();
   const [comments, setComments] = useState<Comment[]>([]);
   const [authOpen, setAuthOpen] = useState(false);
@@ -161,10 +167,9 @@ const CommentsSection = ({ reviewId }: CommentsSectionProps) => {
             userId={user?.id}
             onDelete={handleDeleteRoot}
             reviewId={reviewId}
-            onCommentPosted={() => {
-              // Usually we don't need to refresh roots if a reply was posted
-              // But maybe update count? For now lazy reply loading handles it
-            }}
+            onCommentPosted={() => { }}
+            highlightCommentId={scrollToCommentId}
+            shouldExpandReplies={comment.id === targetCommentParentId}
           />
         ))}
 

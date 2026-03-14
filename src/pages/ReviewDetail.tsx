@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import { ArrowLeft, MessageCircle, Loader2, Bookmark } from "lucide-react";
 import { getReviewById } from "@/data/reviews";
 import StarRating from "@/components/StarRating";
@@ -37,6 +37,7 @@ const renderTextWithLinks = (text: string) => {
 const ReviewDetail = () => {
   const { id } = useParams<{ id: string }>();
   const commentsRef = useRef<HTMLDivElement>(null);
+  const location = useLocation() as { state: { scrollToComment?: string } | null };
   const { isBookmarked, toggleBookmark } = useBookmarks();
   const isFavorite = id ? isBookmarked(id) : false;
 
@@ -49,6 +50,26 @@ const ReviewDetail = () => {
 
   const [showComments, setShowComments] = useState(false);
   const [commentCount, setCommentCount] = useState<number | null>(null);
+  const [targetCommentParentId, setTargetCommentParentId] = useState<string | null>(null);
+
+  // Fetch parent info for deep-linked comment
+  useEffect(() => {
+    const targetCommentId = location.state?.scrollToComment;
+    if (targetCommentId) {
+      const fetchParentId = async () => {
+        const { data, error } = await supabase
+          .from("comments")
+          .select("parent_id")
+          .eq("id", targetCommentId)
+          .single();
+
+        if (!error && data) {
+          setTargetCommentParentId(data.parent_id);
+        }
+      };
+      fetchParentId();
+    }
+  }, [location.state?.scrollToComment]);
 
   useEffect(() => {
     const fetchCommentCount = async () => {
@@ -70,6 +91,25 @@ const ReviewDetail = () => {
       commentsRef.current.scrollIntoView({ behavior: "auto" });
     }
   }, [showComments]);
+
+  // Handle scrollToComment from notification routing
+  useEffect(() => {
+    const targetCommentId = location.state?.scrollToComment;
+    if (targetCommentId) {
+      setShowComments(true);
+      setTimeout(() => {
+        const commentEl = document.getElementById(`comment-${targetCommentId}`);
+        if (commentEl) {
+          commentEl.scrollIntoView({ behavior: "smooth", block: "center" });
+          // Optional: add a brief highlight class
+          commentEl.classList.add("bg-muted/50", "transition-colors", "duration-1000");
+          setTimeout(() => commentEl.classList.remove("bg-muted/50"), 2000);
+        } else if (commentsRef.current) {
+          commentsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 800);
+    }
+  }, [location.state?.scrollToComment]);
 
   if (isLoading) {
     return (
@@ -159,29 +199,28 @@ const ReviewDetail = () => {
             </p>
           </div>
 
-          <div className="flex justify-center pt-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                if (!showComments) {
-                  setShowComments(true);
-                } else {
-                  commentsRef.current?.scrollIntoView({ behavior: "auto" });
-                }
-              }}
-              className="gap-2"
-            >
-              <MessageCircle size={16} />
-              Перейти к комментариям {commentCount !== null ? `(${commentCount})` : ""}
-            </Button>
-          </div>
-
-          <div className={`${!showComments ? "hidden" : ""} border-t border-border/30 pt-8 animate-fade-in`}>
-            <div ref={commentsRef}>
-              <CommentsSection reviewId={id!} />
+          {showComments ? (
+            <div ref={commentsRef} className="mt-12">
+              <CommentsSection
+                reviewId={id!}
+                scrollToCommentId={location.state?.scrollToComment}
+                targetCommentParentId={targetCommentParentId}
+              />
             </div>
-          </div>
+          ) : (
+            <div className="flex justify-center mt-12 pb-12">
+              <Button
+                variant="ghost"
+                onClick={() => setShowComments(true)}
+                className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-all h-auto py-3 px-6 border border-border/30 hover:border-border/60 rounded-xl"
+              >
+                <MessageCircle size={18} />
+                <span>
+                  {commentCount !== null ? `Показать комментарии (${commentCount})` : "Загрузить комментарии"}
+                </span>
+              </Button>
+            </div>
+          )}
         </article>
       </section>
     </div>

@@ -19,9 +19,19 @@ interface CommentItemProps {
     onDelete: (commentId: string) => void;
     reviewId: string;
     onCommentPosted: () => void;
+    highlightCommentId?: string;
+    shouldExpandReplies?: boolean;
 }
 
-export const CommentItem = ({ comment, userId, onDelete, reviewId, onCommentPosted }: CommentItemProps) => {
+export const CommentItem = ({
+    comment,
+    userId,
+    onDelete,
+    reviewId,
+    onCommentPosted,
+    highlightCommentId,
+    shouldExpandReplies
+}: CommentItemProps) => {
     const [replyOpen, setReplyOpen] = useState(false);
     const [replyToUser, setReplyToUser] = useState<string | undefined>(undefined);
     const [refreshReplies, setRefreshReplies] = useState(0);
@@ -46,7 +56,7 @@ export const CommentItem = ({ comment, userId, onDelete, reviewId, onCommentPost
     };
 
     return (
-        <div className="space-y-2 group">
+        <div id={`comment-${comment.id}`} className="space-y-2 group">
             <div className="flex items-start gap-3">
                 {/* Avatar Placeholder */}
                 <div className="w-8 h-8 flex-shrink-0 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center font-bold text-xs select-none">
@@ -109,6 +119,8 @@ export const CommentItem = ({ comment, userId, onDelete, reviewId, onCommentPost
                     onReply={handleChildReply}
                     onDelete={onDelete}
                     refreshTrigger={refreshReplies}
+                    highlightCommentId={highlightCommentId}
+                    autoExpand={shouldExpandReplies}
                 />
             </div>
         </div>

@@ -40,6 +40,49 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          actor_id: string
+          comment_id: string
+          created_at: string
+          id: string
+          is_read: boolean
+          review_id: string
+          user_id: string
+        }
+        Insert: {
+          actor_id: string
+          comment_id: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          review_id: string
+          user_id: string
+        }
+        Update: {
+          actor_id?: string
+          comment_id?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          review_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_actor_id_fkey"
+            columns: ["actor_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_comment_id_fkey"
+            columns: ["comment_id"]
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       profiles: {
         Row: {
           created_at: string

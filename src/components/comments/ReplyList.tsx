@@ -19,9 +19,19 @@ interface ReplyListProps {
     userId?: string;
     onDelete: (commentId: string) => void;
     refreshTrigger?: number;
+    highlightCommentId?: string;
+    autoExpand?: boolean;
 }
 
-export const ReplyList = ({ parentId, onReply, userId, onDelete, refreshTrigger }: ReplyListProps) => {
+export const ReplyList = ({
+    parentId,
+    onReply,
+    userId,
+    onDelete,
+    refreshTrigger,
+    highlightCommentId,
+    autoExpand
+}: ReplyListProps) => {
     const [replies, setReplies] = useState<Comment[]>([]);
     const [loading, setLoading] = useState(false);
     const [expanded, setExpanded] = useState(false);
@@ -38,6 +48,14 @@ export const ReplyList = ({ parentId, onReply, userId, onDelete, refreshTrigger 
         };
         fetchCount();
     }, [parentId, refreshTrigger]); // removed `expanded` — was causing extra count query on expand
+
+    // Auto-expand if requested (for deep-linking)
+    useEffect(() => {
+        if (autoExpand && !expanded) {
+            setExpanded(true);
+            fetchReplies(true); // Load all replies if we're deep-linking to one
+        }
+    }, [autoExpand]);
 
     const fetchReplies = async (loadAll = false) => {
         setLoading(true);
@@ -112,7 +130,7 @@ export const ReplyList = ({ parentId, onReply, userId, onDelete, refreshTrigger 
             ) : (
                 <>
                     {replies.map((reply) => (
-                        <div key={reply.id} className="group relative">
+                        <div key={reply.id} id={`comment-${reply.id}`} className="group relative">
                             <div className="flex items-start gap-2">
                                 <div className="flex-1 space-y-1">
                                     <div className="flex items-center gap-2">

@@ -2,10 +2,13 @@ import { useState, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Menu, Search, X } from "lucide-react";
+import { Menu, Search, X, Bell } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import AuthDialog from "@/components/AuthDialog";
 import UserProfileSheet from "@/components/UserProfileSheet";
+import NotificationsSheet from "@/components/NotificationsSheet";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Sheet,
   SheetContent,
@@ -23,6 +26,24 @@ const Header = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+
+  // Fetch real unread notifications count
+  const { data: unreadNotifications = 0 } = useQuery({
+    queryKey: ["unread_notifications_count", user?.id],
+    queryFn: async () => {
+      if (!user) return 0;
+      const { count, error } = await supabase
+        .from("notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("is_read", false);
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!user,
+  });
 
   // Pull-to-refresh logic
   const touchStartY = useRef<number | null>(null);
@@ -103,8 +124,20 @@ const Header = () => {
           </Link>
         </div>
 
-        {/* Right: Burger Menu */}
-        <div className="flex-1 flex justify-end">
+        {/* Right: Notifications & Burger Menu */}
+        <div className="flex-1 flex justify-end items-center gap-2">
+          {/* Notification Badge */}
+          {user && (
+            <Button variant="ghost" size="icon" onClick={() => setNotificationsOpen(true)} className="relative text-foreground">
+              <Bell size={20} />
+              {unreadNotifications > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-destructive text-[10px] font-bold text-white flex items-center justify-center border-2 border-background">
+                  {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                </span>
+              )}
+            </Button>
+          )}
+
           <Button variant="ghost" size="icon" onClick={() => setMenuOpen(true)} className="text-foreground">
             <Menu size={24} />
           </Button>
@@ -197,7 +230,10 @@ const Header = () => {
 
       <AuthDialog open={authOpen} onOpenChange={setAuthOpen} />
       {user && (
-        <UserProfileSheet open={profileOpen} onOpenChange={setProfileOpen} />
+        <>
+          <UserProfileSheet open={profileOpen} onOpenChange={setProfileOpen} />
+          <NotificationsSheet open={notificationsOpen} onOpenChange={setNotificationsOpen} />
+        </>
       )}
     </header>
   );
