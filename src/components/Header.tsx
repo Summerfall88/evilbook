@@ -1,8 +1,9 @@
 import { useState, useRef } from "react";
+import { usePWAInstall } from "@/hooks/usePWAInstall";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Menu, Search, X, Bell } from "lucide-react";
+import { Menu, Search, X, Bell, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import AuthDialog from "@/components/AuthDialog";
 import UserProfileSheet from "@/components/UserProfileSheet";
@@ -20,6 +21,7 @@ import {
 const Header = () => {
   const { pathname } = useLocation();
   const { user, displayName, loading, signOut } = useAuth();
+  const { isInstallable, promptInstall } = usePWAInstall();
   const [authOpen, setAuthOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -191,6 +193,19 @@ const Header = () => {
             >
               Все рецензии
             </Link>
+
+            {isInstallable && (
+              <button
+                onClick={async () => {
+                  setMenuOpen(false);
+                  await promptInstall();
+                }}
+                className="flex items-center gap-2 uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
+              >
+                <Download size={16} />
+                Установить приложение
+              </button>
+            )}
 
             <div className="border-t border-border/50 pt-4 mt-2">
               {!loading && (
