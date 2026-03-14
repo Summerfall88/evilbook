@@ -76,7 +76,7 @@ const Header = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Поиск по названию или автору..."
-                className="pl-10 w-full bg-card border-border/50 text-foreground"
+                className="pl-10 w-full bg-card border-border/50 text-foreground placeholder:text-xs sm:placeholder:text-sm"
               />
             </div>
             <Button type="submit" variant="default" className="bg-[#ce6355] text-white hover:bg-[#ce6355]/90">
