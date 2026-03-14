@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useAdmin } from "@/hooks/useAdmin";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { Reply } from "lucide-react";
@@ -32,6 +34,8 @@ export const ReplyList = ({
     highlightCommentId,
     autoExpand
 }: ReplyListProps) => {
+    const { role } = useAuth();
+    const isAdmin = useAdmin();
     const [replies, setReplies] = useState<Comment[]>([]);
     const [loading, setLoading] = useState(false);
     const [expanded, setExpanded] = useState(false);
@@ -183,7 +187,7 @@ export const ReplyList = ({
                                             >
                                                 Ответить
                                             </button>
-                                            {userId === reply.user_id && (
+                                            {(userId === reply.user_id || role === 'admin' || isAdmin) && (
                                                 <button
                                                     onClick={() => onDelete(reply.id)}
                                                     className="text-xs text-destructive hover:text-destructive/80 transition-colors opacity-0 group-hover:opacity-100"

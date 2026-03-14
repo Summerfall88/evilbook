@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useAdmin } from "@/hooks/useAdmin";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { CommentInput } from "./CommentInput";
@@ -32,6 +34,8 @@ export const CommentItem = ({
     highlightCommentId,
     shouldExpandReplies
 }: CommentItemProps) => {
+    const { role } = useAuth();
+    const isAdmin = useAdmin();
     const [replyOpen, setReplyOpen] = useState(false);
     const [replyToUser, setReplyToUser] = useState<string | undefined>(undefined);
     const [refreshReplies, setRefreshReplies] = useState(0);
@@ -108,7 +112,7 @@ export const CommentItem = ({
                         >
                             Ответить
                         </button>
-                        {userId === comment.user_id && (
+                        {(userId === comment.user_id || role === 'admin' || isAdmin) && (
                             <button
                                 onClick={handleDelete}
                                 className="text-destructive hover:text-destructive/80 transition-colors opacity-0 group-hover:opacity-100"
