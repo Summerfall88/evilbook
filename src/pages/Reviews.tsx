@@ -31,7 +31,12 @@ const Reviews = () => {
   const queryClient = useQueryClient();
   const { isBookmarked } = useBookmarks();
 
-  const { data: reviews, isLoading, isError } = useQuery({
+  const {
+    data: reviews,
+    isLoading,
+    isError,
+    error: reviewsError
+  } = useQuery({
     queryKey: ["reviews"],
     queryFn: async () => {
       const data = await getReviews();
@@ -48,6 +53,21 @@ const Reviews = () => {
       } catch { return undefined; }
     },
   });
+
+  // Diagnostic logging for errors
+  useEffect(() => {
+    if (isError && reviewsError) {
+      console.error(`[${new Date().toISOString()}] Reviews fetch error:`, reviewsError);
+      // If the error has a specific message or code, log it too
+      if (reviewsError instanceof Error) {
+        console.error("Error details:", {
+          message: reviewsError.message,
+          name: reviewsError.name,
+          stack: reviewsError.stack
+        });
+      }
+    }
+  }, [isError, reviewsError]);
 
   // Загружаем статистику по всем комментариям для сортировки
   const { data: commentsStats } = useQuery({
@@ -251,9 +271,24 @@ const Reviews = () => {
             <span className="ml-3 font-body">Загрузка рецензий...</span>
           </div>
         ) : isError ? (
-          <p className="text-center text-destructive py-20 font-body">
-            Произошла ошибка при загрузке данных
-          </p>
+          <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+            <div className="bg-destructive/10 p-6 rounded-2xl border border-destructive/20 max-w-md">
+              <p className="text-destructive font-bold text-lg mb-2">
+                Ошибка загрузки данных
+              </p>
+              <p className="text-muted-foreground text-sm font-body mb-6">
+                Сервис временно недоступен или возникли проблемы с интернет-соединением. Пожалуйста, попробуйте обновить страницу.
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => queryClient.refetchQueries({ queryKey: ["reviews"] })}
+                className="hover:bg-destructive hover:text-white transition-colors"
+                size="lg"
+              >
+                Попробовать снова
+              </Button>
+            </div>
+          </div>
         ) : filtered.length === 0 ? (
           <p className="text-center text-muted-foreground py-20 font-body">
             Ничего не найдено

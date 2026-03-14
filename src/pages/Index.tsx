@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,10 +17,30 @@ const Index = () => {
   const isAdmin = useAdmin();
   const queryClient = useQueryClient();
 
-  const { data: reviews, isLoading, isError } = useQuery({
+  const {
+    data: reviews,
+    isLoading,
+    isError,
+    error: reviewsError
+  } = useQuery({
     queryKey: ["reviews"],
     queryFn: getReviews,
+    staleTime: 1000 * 60 * 5,
   });
+
+  // Diagnostic logging for errors
+  useEffect(() => {
+    if (isError && reviewsError) {
+      console.error(`[${new Date().toISOString()}] Index fetch error:`, reviewsError);
+      if (reviewsError instanceof Error) {
+        console.error("Error details:", {
+          message: reviewsError.message,
+          name: reviewsError.name,
+          stack: reviewsError.stack
+        });
+      }
+    }
+  }, [isError, reviewsError]);
 
   const latestReviews = reviews ? [...reviews].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 7) : [];
 
@@ -97,9 +117,24 @@ const Index = () => {
             <span className="ml-3 font-body">Загрузка последних рецензий...</span>
           </div>
         ) : isError ? (
-          <p className="text-center text-destructive py-20 font-body">
-            Произошла ошибка при загрузке данных
-          </p>
+          <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+            <div className="bg-destructive/10 p-6 rounded-2xl border border-destructive/20 max-w-md">
+              <p className="text-destructive font-bold text-lg mb-2">
+                Ошибка загрузки рецензий
+              </p>
+              <p className="text-muted-foreground text-sm font-body mb-6">
+                Не удалось загрузить последние рецензии. Проверьте интернет-соединение или попробуйте обновить страницу.
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => queryClient.refetchQueries({ queryKey: ["reviews"] })}
+                className="hover:bg-destructive hover:text-white transition-colors"
+                size="lg"
+              >
+                Попробовать снова
+              </Button>
+            </div>
+          </div>
         ) : latestReviews.length === 0 ? (
           <p className="text-center text-muted-foreground py-20 font-body">
             Пока нет ни одной рецензии

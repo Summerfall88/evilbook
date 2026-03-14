@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import type { User } from "@supabase/supabase-js";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -18,52 +19,44 @@ const AuthContext = createContext<AuthState | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [displayName, setDisplayName] = useState<string | null>(null);
-  const [role, setRole] = useState<"admin" | "user" | null>(null);
   const [loading, setLoading] = useState(true);
-  const [profileLoading, setProfileLoading] = useState(true);
   const [recoveryMode, setRecoveryMode] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [updatingPassword, setUpdatingPassword] = useState(false);
 
-  useEffect(() => {
-    let currentUserId: string | null = null;
+  // Use useQuery for profile fetching to benefit from global retries and caching
+  const {
+    data: profile,
+    isLoading: isProfileQueryLoading,
+  } = useQuery({
+    queryKey: ["profile", user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("display_name, role")
+        .eq("id", user.id)
+        .maybeSingle();
 
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const displayName = profile?.display_name || (user ? "Пользователь" : null);
+  const role = profile?.role as "admin" | "user" | null;
+  const profileLoading = isProfileQueryLoading && !!user;
+
+  useEffect(() => {
     // Listen for auth changes (handles initial session too)
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY") {
-        setRecoveryMode(true);
-      }
-
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
       setLoading(false);
-
-      if (currentUser) {
-        if (currentUserId !== currentUser.id) {
-          setProfileLoading(true);
-        }
-        currentUserId = currentUser.id;
-
-        // Fetch profile in background without blocking UI
-        supabase
-          .from("profiles")
-          .select("display_name, role")
-          .eq("id", currentUser.id)
-          .maybeSingle()
-          .then(({ data }) => {
-            setDisplayName(data?.display_name ?? "Пользователь");
-            setRole(data?.role as "admin" | "user" | null);
-            setProfileLoading(false);
-          });
-      } else {
-        currentUserId = null;
-        setDisplayName(null);
-        setRole(null);
-        setProfileLoading(false);
-      }
     });
 
     return () => subscription.unsubscribe();

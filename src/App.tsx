@@ -25,6 +25,8 @@ const queryClient = new QueryClient({
       staleTime: 1000 * 60 * 1, // Data is fresh for 1 minute
       gcTime: 1000 * 60 * 5, // Keep in cache for 5 minutes
       refetchOnWindowFocus: false, // Don't refetch on tab switch by default 
+      retry: 3, // Retry failed requests 3 times before showing error
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
     },
   },
 });

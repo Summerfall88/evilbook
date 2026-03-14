@@ -41,12 +41,32 @@ const ReviewDetail = () => {
   const { isBookmarked, toggleBookmark } = useBookmarks();
   const isFavorite = id ? isBookmarked(id) : false;
 
-  const { data: review, isLoading, isError } = useQuery({
+  const {
+    data: review,
+    isLoading,
+    isError,
+    error: reviewError,
+    refetch
+  } = useQuery({
     queryKey: ["review", id],
     queryFn: () => getReviewById(id!),
     enabled: !!id,
     staleTime: 1000 * 60 * 5, // 5 минут — повторный открыв без спиннера
   });
+
+  // Diagnostic logging for errors
+  useEffect(() => {
+    if (isError && reviewError) {
+      console.error(`[${new Date().toISOString()}] Review fetch error (${id}):`, reviewError);
+      if (reviewError instanceof Error) {
+        console.error("Error details:", {
+          message: reviewError.message,
+          name: reviewError.name,
+          stack: reviewError.stack
+        });
+      }
+    }
+  }, [isError, reviewError, id]);
 
   const [showComments, setShowComments] = useState(false);
   const [commentCount, setCommentCount] = useState<number | null>(null);
@@ -108,14 +128,30 @@ const ReviewDetail = () => {
     );
   }
 
-  if (isError || !review) {
+  if (isError || (!isLoading && !review)) {
     return (
-      <div className="flex items-center justify-center grow text-center space-y-4 py-20">
-        <div>
-          <p className="text-muted-foreground font-body text-lg">Рецензия не найдена или произошла ошибка</p>
-          <Link to="/reviews" className="text-gold hover:underline text-sm">
-            ← Вернуться к рецензиям
-          </Link>
+      <div className="flex flex-col items-center justify-center grow text-center py-20 px-4">
+        <div className="bg-destructive/10 p-6 rounded-2xl border border-destructive/20 max-w-md w-full">
+          <p className="text-destructive font-bold text-lg mb-2">
+            Рецензия не найдена
+          </p>
+          <p className="text-muted-foreground text-sm font-body mb-6">
+            Не удалось загрузить данные. Это может быть связано с временным сбоем в базе данных или проблемами с подключением.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button
+              variant="outline"
+              onClick={() => refetch()}
+              className="hover:bg-destructive hover:text-white transition-colors"
+            >
+              Попробовать снова
+            </Button>
+            <Button variant="ghost" asChild>
+              <Link to="/reviews">
+                ← К списку рецензий
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
     );
