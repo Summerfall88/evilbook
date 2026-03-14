@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Plus, Search, Loader2, ArrowDownUp } from "lucide-react";
+import { Plus, Loader2, ArrowDownUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ReviewCard from "@/components/ReviewCard";
@@ -8,15 +8,9 @@ import { getReviews, saveReview, deleteReview, type Review } from "@/data/review
 import { useAdmin } from "@/hooks/useAdmin";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useBookmarks } from "@/hooks/useBookmarks";
 
-type SortOption = "latest" | "discussed" | "recommended";
+type SortOption = "favorites" | "latest" | "discussed" | "recommended";
 
 const Reviews = () => {
   const [search, setSearch] = useState(() => sessionStorage.getItem("evilbook-search") || "");
@@ -35,6 +29,7 @@ const Reviews = () => {
   const [editingReview, setEditingReview] = useState<Review | null>(null);
   const isAdmin = useAdmin();
   const queryClient = useQueryClient();
+  const { isBookmarked } = useBookmarks();
 
   const { data: reviews, isLoading, isError } = useQuery({
     queryKey: ["reviews"],
@@ -80,7 +75,14 @@ const Reviews = () => {
       result = result.filter(r => r.title.toLowerCase().includes(q) || r.author.toLowerCase().includes(q));
     }
 
-    // 2. Сортировка
+    // 2. Сортировка / Фильтрация Избранного
+    if (sortBy === "favorites") {
+      result = result.filter(r => isBookmarked(r.id));
+      // Сортировка избранного по умолчанию по дате
+      result.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      return result;
+    }
+
     if (sortBy === "latest") {
       // Изначально они уже отсортированы по sort_order из getReviews
       // Ничего не делаем, либо можно дополнительно сортировать по дате создания, если нужно
@@ -129,12 +131,13 @@ const Reviews = () => {
     });
 
     return result;
-  }, [reviews, search, sortBy, commentsStats]);
+  }, [reviews, search, sortBy, commentsStats, isBookmarked]);
 
   const displayedReviews = filtered.slice(0, visibleCount);
   const hasMore = visibleCount < filtered.length;
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Keep internal state for filtering but input is removed from UI
     setSearch(e.target.value);
     setVisibleCount(10);
   };
@@ -175,30 +178,39 @@ const Reviews = () => {
           </Button>}
         </div>
 
-        {/* Search & Filter Options */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-8 items-stretch sm:items-center">
-          <div className="relative flex-1 max-w-md">
-            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input value={search} onChange={handleSearchChange} placeholder="Поиск по названию или автору..." className="pl-10 bg-card border-border/50 text-foreground placeholder:text-muted-foreground/50 w-full" />
-          </div>
-
-          <div className="w-full sm:w-[200px]">
-            <Select
-              value={sortBy}
-              onValueChange={(val: SortOption) => { setSortBy(val); setVisibleCount(10); }}
-            >
-              <SelectTrigger className="w-full bg-card border-border/50">
-                <div className="flex items-center gap-2">
-                  <ArrowDownUp size={14} className="text-muted-foreground" />
-                  <SelectValue placeholder="Сортировка" />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="latest">Последние</SelectItem>
-                <SelectItem value="discussed">Обсуждаемые</SelectItem>
-                <SelectItem value="recommended">Рекомендуемые</SelectItem>
-              </SelectContent>
-            </Select>
+        {/* Filter Options */}
+        <div className="flex justify-center mb-8">
+          <div className="w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0 hide-scrollbar">
+            <div className="flex items-center gap-2 min-w-max">
+              <Button
+                variant={sortBy === "favorites" ? "default" : "outline"}
+                onClick={() => { setSortBy("favorites"); setVisibleCount(10); }}
+                className={`font-body px-4 py-2 h-10 ${sortBy === "favorites" ? "bg-[#ce6355] text-white hover:bg-[#ce6355]/90 border-transparent transition-all duration-300" : "border-border/50 text-foreground hover:border-gold hover:text-gold"}`}
+              >
+                Избранное
+              </Button>
+              <Button
+                variant={sortBy === "latest" ? "default" : "outline"}
+                onClick={() => { setSortBy("latest"); setVisibleCount(10); }}
+                className={`font-body px-4 py-2 h-10 ${sortBy === "latest" ? "bg-[#ce6355] text-white hover:bg-[#ce6355]/90 border-transparent transition-all duration-300" : "border-border/50 text-foreground hover:border-gold hover:text-gold"}`}
+              >
+                Последние
+              </Button>
+              <Button
+                variant={sortBy === "discussed" ? "default" : "outline"}
+                onClick={() => { setSortBy("discussed"); setVisibleCount(10); }}
+                className={`font-body px-4 py-2 h-10 ${sortBy === "discussed" ? "bg-[#ce6355] text-white hover:bg-[#ce6355]/90 border-transparent transition-all duration-300" : "border-border/50 text-foreground hover:border-gold hover:text-gold"}`}
+              >
+                Обсуждаемые
+              </Button>
+              <Button
+                variant={sortBy === "recommended" ? "default" : "outline"}
+                onClick={() => { setSortBy("recommended"); setVisibleCount(10); }}
+                className={`font-body px-4 py-2 h-10 ${sortBy === "recommended" ? "bg-[#ce6355] text-white hover:bg-[#ce6355]/90 border-transparent transition-all duration-300" : "border-border/50 text-foreground hover:border-gold hover:text-gold"}`}
+              >
+                Рекомендуемые
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -217,7 +229,7 @@ const Reviews = () => {
           </p>
         ) : (
           <div className="space-y-10">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-6">
               {displayedReviews.map((review) => <div key={review.id}>
                 <ReviewCard review={review} onEdit={isAdmin ? () => {
                   setEditingReview(review);

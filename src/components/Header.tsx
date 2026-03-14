@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
+import { Menu, Search, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import AuthDialog from "@/components/AuthDialog";
 import UserProfileSheet from "@/components/UserProfileSheet";
 import {
@@ -19,28 +20,71 @@ const Header = () => {
   const [authOpen, setAuthOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      sessionStorage.setItem("evilbook-search", searchQuery);
+      if (pathname === "/reviews") {
+        window.location.reload();
+      } else {
+        navigate("/reviews");
+      }
+      setSearchOpen(false);
+      setSearchQuery("");
+    }
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 bg-background/95 border-b border-border/50 backdrop-blur-sm">
-      <div className="container mx-auto flex items-center justify-between py-4 px-4">
-        <Link to="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-lg bg-card border border-border/50 flex items-center justify-center overflow-hidden group-hover:border-[#ce6355]/50 transition-colors duration-300">
-            <img src="/favicon.png?v=1" alt="Logo" className="w-7 h-7 object-contain" />
-          </div>
-          <div>
-            <h1 className="font-evilbook text-xl font-semibold tracking-wide text-foreground leading-none">
-              Evilbook
-            </h1>
-            <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-              by Christina
-            </span>
-          </div>
-        </Link>
+      <div className="container mx-auto flex items-center justify-between py-4 px-4 h-[72px]">
+        {/* Left: Search Icon */}
+        <div className="flex-1 flex justify-start">
+          <Button variant="ghost" size="icon" onClick={() => setSearchOpen(!searchOpen)} className="text-foreground">
+            {searchOpen ? <X size={20} /> : <Search size={20} />}
+          </Button>
+        </div>
 
-        <Button variant="ghost" size="icon" onClick={() => setMenuOpen(true)} className="text-foreground">
-          <Menu size={24} />
-        </Button>
+        {/* Center: Title / Logo */}
+        <div className="flex flex-1 justify-center items-center">
+          <Link to="/" className="flex items-center group">
+            <div className="w-10 h-10 rounded-lg bg-card border border-border/50 flex items-center justify-center overflow-hidden group-hover:border-[#ce6355]/50 transition-colors duration-300">
+              <img src="/favicon.png?v=2" alt="Logo" className="w-7 h-7 object-contain" />
+            </div>
+          </Link>
+        </div>
+
+        {/* Right: Burger Menu */}
+        <div className="flex-1 flex justify-end">
+          <Button variant="ghost" size="icon" onClick={() => setMenuOpen(true)} className="text-foreground">
+            <Menu size={24} />
+          </Button>
+        </div>
       </div>
+
+      {/* Search Dropdown */}
+      {searchOpen && (
+        <div className="absolute top-full left-0 right-0 p-4 bg-background border-b border-border/50 shadow-md animate-in slide-in-from-top-2">
+          <form onSubmit={handleSearchSubmit} className="relative max-w-md mx-auto flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                autoFocus
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Поиск по названию или автору..."
+                className="pl-10 w-full bg-card border-border/50 text-foreground"
+              />
+            </div>
+            <Button type="submit" variant="default" className="bg-[#ce6355] text-white hover:bg-[#ce6355]/90">
+              Искать
+            </Button>
+          </form>
+        </div>
+      )}
 
       {/* Navigation menu sheet */}
       <Sheet open={menuOpen} onOpenChange={setMenuOpen}>

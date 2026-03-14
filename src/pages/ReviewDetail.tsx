@@ -7,6 +7,7 @@ import CommentsSection from "@/components/CommentsSection";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { useBookmarks } from "@/hooks/useBookmarks";
 
 // Утилита для рендера ссылок в тексте
 const renderTextWithLinks = (text: string) => {
@@ -36,7 +37,8 @@ const renderTextWithLinks = (text: string) => {
 const ReviewDetail = () => {
   const { id } = useParams<{ id: string }>();
   const commentsRef = useRef<HTMLDivElement>(null);
-  const [isFavorite, setIsFavorite] = useState(false);
+  const { isBookmarked, toggleBookmark } = useBookmarks();
+  const isFavorite = id ? isBookmarked(id) : false;
 
   const { data: review, isLoading, isError } = useQuery({
     queryKey: ["review", id],
@@ -96,10 +98,10 @@ const ReviewDetail = () => {
     year: "numeric",
   });
 
-  const toggleFavorite = (e: React.MouseEvent) => {
+  const handleToggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsFavorite(!isFavorite);
+    if (id) toggleBookmark(id);
   };
 
   return (
@@ -122,7 +124,7 @@ const ReviewDetail = () => {
                   className="w-full h-full object-cover"
                 />
                 <button
-                  onClick={toggleFavorite}
+                  onClick={handleToggleFavorite}
                   className="absolute top-3 right-3 z-10 p-2 rounded-full bg-background/40 backdrop-blur-md border border-white/10 transition-all duration-300 hover:scale-110 active:scale-95"
                   title={isFavorite ? "Удалить из избранного" : "Добавить в избранное"}
                 >

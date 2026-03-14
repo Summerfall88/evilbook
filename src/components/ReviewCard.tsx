@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Bookmark } from "lucide-react";
 import { getReviewById, Review } from "@/data/reviews";
 import StarRating from "./StarRating";
+import { useBookmarks } from "@/hooks/useBookmarks";
 interface ReviewCardProps {
   review: Review;
   onEdit?: () => void;
@@ -12,7 +13,8 @@ const ReviewCard = ({
   review,
   onEdit
 }: ReviewCardProps) => {
-  const [isFavorite, setIsFavorite] = useState(false);
+  const { isBookmarked, toggleBookmark } = useBookmarks();
+  const isFavorite = isBookmarked(review.id);
   const formattedDate = new Date(review.date).toLocaleDateString("ru-RU", {
     day: "numeric",
     month: "long",
@@ -28,10 +30,10 @@ const ReviewCard = ({
     });
   };
 
-  const toggleFavorite = (e: React.MouseEvent) => {
+  const handleToggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsFavorite(!isFavorite);
+    toggleBookmark(review.id);
   };
 
   return <article className="group bg-card border border-border/50 rounded-lg overflow-hidden transition-all duration-300 hover:border-gold/30 hover:shadow-[0_0_30px_-10px_hsl(42,60%,55%,0.15)] relative">
@@ -56,7 +58,7 @@ const ReviewCard = ({
     </Link>
 
     <button
-      onClick={toggleFavorite}
+      onClick={handleToggleFavorite}
       className="absolute top-3 right-3 z-10 p-2 rounded-full bg-background/40 backdrop-blur-md border border-white/10 transition-all duration-300 hover:scale-110 active:scale-95 group/bookmark"
       title={isFavorite ? "Удалить из избранного" : "Добавить в избранное"}
     >
