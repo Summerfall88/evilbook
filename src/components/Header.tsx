@@ -194,16 +194,18 @@ const Header = () => {
               Все рецензии
             </Link>
 
-            <button
-              onClick={async () => {
-                setMenuOpen(false);
-                await promptInstall();
-              }}
-              className="flex items-center gap-2 uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
-            >
-              <Download size={16} />
-              Установить приложение
-            </button>
+            {isInstallable && (
+              <button
+                onClick={async () => {
+                  setMenuOpen(false);
+                  await promptInstall();
+                }}
+                className="flex items-center gap-2 uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
+              >
+                <Download size={16} />
+                Установить приложение
+              </button>
+            )}
 
             <div className="border-t border-border/50 pt-4 mt-2">
               {!loading && (
