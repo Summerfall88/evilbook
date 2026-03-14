@@ -44,16 +44,16 @@ export default function NotificationsSheet({ open, onOpenChange }: Notifications
                     ),
                     comments!notifications_comment_id_fkey (
                         content
+                    ),
+                    reviews!notifications_review_id_fkey (
+                        cover_url
                     )
                 `)
                 .eq("user_id", user.id)
                 .order("created_at", { ascending: false })
                 .limit(20);
 
-            if (error) {
-                console.error("Notifications fetch error:", error);
-                throw error;
-            }
+            if (error) throw error;
             return data as any[];
         },
         enabled: !!user && open,

@@ -80,6 +80,12 @@ export type Database = {
             columns: ["comment_id"]
             referencedRelation: "comments"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_review_id_fkey"
+            columns: ["review_id"]
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
           }
         ]
       }
