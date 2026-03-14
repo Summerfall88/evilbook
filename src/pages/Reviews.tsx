@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Plus, Loader2, ArrowDownUp } from "lucide-react";
+import { Plus, Loader2, ArrowDownUp, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ReviewCard from "@/components/ReviewCard";
@@ -184,28 +184,44 @@ const Reviews = () => {
             <div className="flex items-center gap-2 min-w-max">
               <Button
                 variant={sortBy === "favorites" ? "default" : "outline"}
-                onClick={() => { setSortBy("favorites"); setVisibleCount(10); }}
+                onClick={() => {
+                  setSortBy("favorites");
+                  setSearch("");
+                  setVisibleCount(10);
+                }}
                 className={`font-body px-3 h-8 text-[15px] border-transparent ${sortBy === "favorites" ? "bg-[#ce6355] text-white hover:bg-[#ce6355]/90 transition-all duration-300" : "text-foreground hover:text-gold"}`}
               >
                 Избранное
               </Button>
               <Button
                 variant={sortBy === "latest" ? "default" : "outline"}
-                onClick={() => { setSortBy("latest"); setVisibleCount(10); }}
+                onClick={() => {
+                  setSortBy("latest");
+                  setSearch("");
+                  setVisibleCount(10);
+                }}
                 className={`font-body px-3 h-8 text-[15px] border-transparent ${sortBy === "latest" ? "bg-[#ce6355] text-white hover:bg-[#ce6355]/90 transition-all duration-300" : "text-foreground hover:text-gold"}`}
               >
                 Последние
               </Button>
               <Button
                 variant={sortBy === "discussed" ? "default" : "outline"}
-                onClick={() => { setSortBy("discussed"); setVisibleCount(10); }}
+                onClick={() => {
+                  setSortBy("discussed");
+                  setSearch("");
+                  setVisibleCount(10);
+                }}
                 className={`font-body px-3 h-8 text-[15px] border-transparent ${sortBy === "discussed" ? "bg-[#ce6355] text-white hover:bg-[#ce6355]/90 transition-all duration-300" : "text-foreground hover:text-gold"}`}
               >
                 Обсуждаемые
               </Button>
               <Button
                 variant={sortBy === "recommended" ? "default" : "outline"}
-                onClick={() => { setSortBy("recommended"); setVisibleCount(10); }}
+                onClick={() => {
+                  setSortBy("recommended");
+                  setSearch("");
+                  setVisibleCount(10);
+                }}
                 className={`font-body px-3 h-8 text-[15px] border-transparent ${sortBy === "recommended" ? "bg-[#ce6355] text-white hover:bg-[#ce6355]/90 transition-all duration-300" : "text-foreground hover:text-gold"}`}
               >
                 Рекомендуемые
@@ -213,6 +229,21 @@ const Reviews = () => {
             </div>
           </div>
         </div>
+
+        {/* Search Query Indicator */}
+        {search && (
+          <div className="flex items-center gap-2 mb-6 px-4 py-2 bg-muted/30 rounded-lg w-fit animate-in fade-in slide-in-from-left-2">
+            <span className="text-sm text-muted-foreground whitespace-nowrap">Результаты поиска для:</span>
+            <span className="text-sm font-semibold truncate max-w-[200px]">"{search}"</span>
+            <button
+              onClick={() => setSearch("")}
+              className="ml-2 p-1 hover:bg-muted rounded-full transition-colors text-muted-foreground hover:text-destructive"
+              title="Сбросить поиск"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        )}
 
         {isLoading ? (
           <div className="flex justify-center items-center py-20 text-muted-foreground">
