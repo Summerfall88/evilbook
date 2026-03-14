@@ -87,7 +87,16 @@ const Header = () => {
 
         {/* Center: Title / Logo */}
         <div className="flex flex-1 justify-center items-center">
-          <Link to="/" className="flex items-center group">
+          <Link
+            to="/reviews"
+            onClick={(e) => {
+              if (pathname === "/reviews") {
+                e.preventDefault();
+                window.location.reload();
+              }
+            }}
+            className="flex items-center group"
+          >
             <div className="w-10 h-10 rounded-lg bg-card border border-border/50 flex items-center justify-center overflow-hidden group-hover:border-[#ce6355]/50 transition-colors duration-300">
               <img src="/favicon.png?v=2" alt="Logo" className="w-7 h-7 object-contain" />
             </div>
