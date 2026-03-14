@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
@@ -13,22 +13,34 @@ import {
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Loader2 } from "lucide-react";
 
 interface NotificationsSheetProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }
 
+const PAGE_SIZE = 10;
+
 export default function NotificationsSheet({ open, onOpenChange }: NotificationsSheetProps) {
     const { user } = useAuth();
     const queryClient = useQueryClient();
     const navigate = useNavigate();
 
-    // Fetch notifications
-    const { data: notifications, isLoading } = useQuery({
+    // Fetch notifications with pagination
+    const {
+        data: notificationsPages,
+        isLoading,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage
+    } = useInfiniteQuery({
         queryKey: ["notifications", user?.id],
-        queryFn: async () => {
+        queryFn: async ({ pageParam = 0 }) => {
             if (!user) return [];
+
+            const from = pageParam * PAGE_SIZE;
+            const to = from + PAGE_SIZE - 1;
 
             const { data, error } = await supabase
                 .from("notifications")
@@ -51,13 +63,19 @@ export default function NotificationsSheet({ open, onOpenChange }: Notifications
                 `)
                 .eq("user_id", user.id)
                 .order("created_at", { ascending: false })
-                .limit(20);
+                .range(from, to);
 
             if (error) throw error;
             return data as any[];
         },
+        getNextPageParam: (lastPage, allPages) => {
+            return lastPage.length === PAGE_SIZE ? allPages.length : undefined;
+        },
         enabled: !!user && open,
+        initialPageParam: 0,
     });
+
+    const notifications = notificationsPages?.pages.flat() || [];
 
     // Mark all as read when opened
     useEffect(() => {
@@ -135,6 +153,23 @@ export default function NotificationsSheet({ open, onOpenChange }: Notifications
                                     </button>
                                 );
                             })}
+
+                            {hasNextPage && (
+                                <button
+                                    onClick={() => fetchNextPage()}
+                                    disabled={isFetchingNextPage}
+                                    className="w-full py-4 text-sm font-semibold text-primary hover:bg-muted/50 transition-colors flex items-center justify-center gap-2"
+                                >
+                                    {isFetchingNextPage ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            Загрузка...
+                                        </>
+                                    ) : (
+                                        "Загрузить ещё"
+                                    )}
+                                </button>
+                            )}
                         </div>
                     )}
                 </ScrollArea>

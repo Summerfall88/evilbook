@@ -100,6 +100,32 @@ export const ReplyList = ({
         setLoading(false);
     };
 
+    // Scroll to highlighted reply when it appears in the list
+    const [showHighlightId, setShowHighlightId] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (highlightCommentId && replies.length > 0) {
+            const hasHighlighted = replies.some(r => r.id === highlightCommentId);
+            if (hasHighlighted) {
+                setShowHighlightId(highlightCommentId);
+                const highlightTimer = setTimeout(() => setShowHighlightId(null), 3000);
+
+                // Short delay to ensure DOM is updated
+                const scrollTimer = setTimeout(() => {
+                    const el = document.getElementById(`comment-${highlightCommentId}`);
+                    if (el) {
+                        el.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }
+                }, 100);
+
+                return () => {
+                    clearTimeout(highlightTimer);
+                    clearTimeout(scrollTimer);
+                };
+            }
+        }
+    }, [replies, highlightCommentId]);
+
     const handleExpand = () => {
         if (expanded) {
             setExpanded(false);
@@ -129,41 +155,48 @@ export const ReplyList = ({
                 </button>
             ) : (
                 <>
-                    {replies.map((reply) => (
-                        <div key={reply.id} id={`comment-${reply.id}`} className="group relative">
-                            <div className="flex items-start gap-2">
-                                <div className="flex-1 space-y-1">
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-display font-bold text-xs text-foreground">
-                                            {reply.profile?.display_name ?? "Пользователь"}
-                                        </span>
-                                        <span className="text-[10px] text-muted-foreground">
-                                            {format(new Date(reply.created_at), "d MMM", { locale: ru })}
-                                        </span>
-                                    </div>
-                                    <p className="text-sm text-foreground leading-snug">
-                                        {reply.content}
-                                    </p>
-                                    <div className="flex items-center gap-4 mt-1">
-                                        <button
-                                            onClick={() => onReply(reply)}
-                                            className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
-                                        >
-                                            Ответить
-                                        </button>
-                                        {userId === reply.user_id && (
+                    {replies.map((reply) => {
+                        const isHighlighted = showHighlightId === reply.id;
+                        return (
+                            <div
+                                key={reply.id}
+                                id={`comment-${reply.id}`}
+                                className={`group relative transition-all duration-1000 ${isHighlighted ? "bg-cream/40 ring-1 ring-gold/10 rounded-lg p-3 -m-3 shadow-sm" : ""}`}
+                            >
+                                <div className="flex items-start gap-2">
+                                    <div className="flex-1 space-y-1">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-display font-bold text-xs text-foreground">
+                                                {reply.profile?.display_name ?? "Пользователь"}
+                                            </span>
+                                            <span className="text-[10px] text-muted-foreground">
+                                                {format(new Date(reply.created_at), "d MMM", { locale: ru })}
+                                            </span>
+                                        </div>
+                                        <p className="text-sm text-foreground leading-snug">
+                                            {reply.content}
+                                        </p>
+                                        <div className="flex items-center gap-4 mt-1">
                                             <button
-                                                onClick={() => onDelete(reply.id)}
-                                                className="text-xs text-destructive hover:text-destructive/80 transition-colors opacity-0 group-hover:opacity-100"
+                                                onClick={() => onReply(reply)}
+                                                className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
                                             >
-                                                Удалить
+                                                Ответить
                                             </button>
-                                        )}
+                                            {userId === reply.user_id && (
+                                                <button
+                                                    onClick={() => onDelete(reply.id)}
+                                                    className="text-xs text-destructive hover:text-destructive/80 transition-colors opacity-0 group-hover:opacity-100"
+                                                >
+                                                    Удалить
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
 
                     {loading && <p className="text-xs text-muted-foreground animate-pulse ml-2">Загрузка...</p>}
 

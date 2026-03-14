@@ -97,17 +97,6 @@ const ReviewDetail = () => {
     const targetCommentId = location.state?.scrollToComment;
     if (targetCommentId) {
       setShowComments(true);
-      setTimeout(() => {
-        const commentEl = document.getElementById(`comment-${targetCommentId}`);
-        if (commentEl) {
-          commentEl.scrollIntoView({ behavior: "smooth", block: "center" });
-          // Optional: add a brief highlight class
-          commentEl.classList.add("bg-muted/50", "transition-colors", "duration-1000");
-          setTimeout(() => commentEl.classList.remove("bg-muted/50"), 2000);
-        } else if (commentsRef.current) {
-          commentsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }, 800);
     }
   }, [location.state?.scrollToComment]);
 

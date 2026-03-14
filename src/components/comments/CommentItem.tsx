@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { CommentInput } from "./CommentInput";
@@ -35,8 +35,28 @@ export const CommentItem = ({
     const [replyOpen, setReplyOpen] = useState(false);
     const [replyToUser, setReplyToUser] = useState<string | undefined>(undefined);
     const [refreshReplies, setRefreshReplies] = useState(0);
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const [showHighlight, setShowHighlight] = useState(false);
+
+    useEffect(() => {
+        if (highlightCommentId === comment.id) {
+            setShowHighlight(true);
+            const timer = setTimeout(() => setShowHighlight(false), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [highlightCommentId, comment.id]);
 
     const handleDelete = () => onDelete(comment.id);
+
+    useEffect(() => {
+        if (showHighlight && scrollRef.current) {
+            // Delay slightly to ensure layout is stable
+            const timer = setTimeout(() => {
+                scrollRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }, [showHighlight]);
 
     const handleRootReply = () => {
         setReplyToUser(undefined);
@@ -56,7 +76,11 @@ export const CommentItem = ({
     };
 
     return (
-        <div id={`comment-${comment.id}`} className="space-y-2 group">
+        <div
+            ref={scrollRef}
+            id={`comment-${comment.id}`}
+            className={`space-y-2 group transition-all duration-1000 ${showHighlight ? "bg-cream/40 ring-1 ring-gold/10 rounded-lg p-3 -m-3 shadow-sm" : ""}`}
+        >
             <div className="flex items-start gap-3">
                 {/* Avatar Placeholder */}
                 <div className="w-8 h-8 flex-shrink-0 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center font-bold text-xs select-none">
