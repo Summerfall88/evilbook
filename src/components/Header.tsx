@@ -33,7 +33,7 @@ const Header = () => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   // Fetch real unread notifications count
-  const { data: unreadNotifications = 0 } = useQuery({
+  const { data: unreadNotifications = 0, refetch: refetchCount } = useQuery({
     queryKey: ["unread_notifications_count", user?.id],
     queryFn: async () => {
       if (!user) return 0;
@@ -52,6 +52,8 @@ const Header = () => {
   useEffect(() => {
     if (!user) return;
 
+    console.log(`Setting up real-time notifications for user: ${user.id}`);
+
     const channel = supabase
       .channel(`notifications-count-${user.id}`)
       .on(
@@ -62,17 +64,22 @@ const Header = () => {
           table: 'notifications',
           filter: `user_id=eq.${user.id}`,
         },
-        () => {
-          // Invalidate the count query to refetch
+        (payload) => {
+          console.log('Real-time notification change detected:', payload);
+          // Invalidate and refetch immediately
           queryClient.invalidateQueries({ queryKey: ["unread_notifications_count", user.id] });
+          refetchCount();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log(`Real-time subscription status for user ${user.id}:`, status);
+      });
 
     return () => {
+      console.log(`Cleaning up real-time notifications for user: ${user.id}`);
       supabase.removeChannel(channel);
     };
-  }, [user, queryClient]);
+  }, [user, queryClient, refetchCount]);
 
   // Pull-to-refresh logic
   const touchStartY = useRef<number | null>(null);

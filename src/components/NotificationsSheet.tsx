@@ -33,7 +33,8 @@ export default function NotificationsSheet({ open, onOpenChange }: Notifications
         isLoading,
         fetchNextPage,
         hasNextPage,
-        isFetchingNextPage
+        isFetchingNextPage,
+        refetch: refetchNotifications
     } = useInfiniteQuery({
         queryKey: ["notifications", user?.id],
         queryFn: async ({ pageParam = 0 }) => {
@@ -89,10 +90,11 @@ export default function NotificationsSheet({ open, onOpenChange }: Notifications
 
                 queryClient.invalidateQueries({ queryKey: ["notifications", user.id] });
                 queryClient.invalidateQueries({ queryKey: ["unread_notifications_count", user.id] });
+                refetchNotifications();
             };
             markAsRead();
         }
-    }, [open, user, notifications, queryClient]);
+    }, [open, user, notifications, queryClient, refetchNotifications]);
 
     // Real-time notifications subscription
     useEffect(() => {
@@ -112,6 +114,7 @@ export default function NotificationsSheet({ open, onOpenChange }: Notifications
                     // Invalidate the notifications query to refetch
                     queryClient.invalidateQueries({ queryKey: ["notifications", user.id] });
                     queryClient.invalidateQueries({ queryKey: ["unread_notifications_count", user.id] });
+                    refetchNotifications();
                 }
             )
             .subscribe();
@@ -119,7 +122,7 @@ export default function NotificationsSheet({ open, onOpenChange }: Notifications
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [user, queryClient]);
+    }, [user, queryClient, refetchNotifications]);
 
     const handleNotificationClick = (reviewId: string, commentId: string) => {
         onOpenChange(false);
