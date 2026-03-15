@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import type { User } from "@supabase/supabase-js";
@@ -82,8 +82,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUpdatingPassword(false);
   };
 
+  const contextValue = useMemo(() => ({
+    user,
+    displayName,
+    role,
+    loading,
+    profileLoading,
+    signOut
+  }), [user, displayName, role, loading, profileLoading]);
+
   return (
-    <AuthContext.Provider value={{ user, displayName, role, loading, profileLoading, signOut }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
       <Dialog open={recoveryMode} onOpenChange={setRecoveryMode}>
         <DialogContent className="sm:max-w-md">

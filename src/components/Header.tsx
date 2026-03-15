@@ -50,36 +50,41 @@ const Header = () => {
 
   // Real-time notifications subscription
   useEffect(() => {
-    if (!user) return;
+    if (!user?.id) return;
 
-    console.log(`Setting up real-time notifications for user: ${user.id}`);
+    let channel: any = null;
+    let isMounted = true;
+    
+    // Tiny delay to ensure stable connection on route transitions/re-renders
+    const timer = setTimeout(() => {
+      if (!isMounted) return;
 
-    const channel = supabase
-      .channel(`notifications-count-${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          console.log('Real-time notification change detected:', payload);
-          // Invalidate and refetch immediately
-          queryClient.invalidateQueries({ queryKey: ["unread_notifications_count", user.id] });
-          refetchCount();
-        }
-      )
-      .subscribe((status) => {
-        console.log(`Real-time subscription status for user ${user.id}:`, status);
-      });
+      channel = supabase
+        .channel(`notifications-badge-${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${user.id}`,
+          },
+          () => {
+            queryClient.invalidateQueries({ queryKey: ["unread_notifications_count", user.id] });
+            refetchCount();
+          }
+        )
+        .subscribe();
+    }, 150);
 
     return () => {
-      console.log(`Cleaning up real-time notifications for user: ${user.id}`);
-      supabase.removeChannel(channel);
+      isMounted = false;
+      clearTimeout(timer);
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
-  }, [user, queryClient, refetchCount]);
+  }, [user?.id, queryClient, refetchCount]);
 
   // Pull-to-refresh logic
   const touchStartY = useRef<number | null>(null);
