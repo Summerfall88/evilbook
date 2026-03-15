@@ -94,6 +94,33 @@ export default function NotificationsSheet({ open, onOpenChange }: Notifications
         }
     }, [open, user, notifications, queryClient]);
 
+    // Real-time notifications subscription
+    useEffect(() => {
+        if (!user) return;
+
+        const channel = supabase
+            .channel(`notifications-list-${user.id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'notifications',
+                    filter: `user_id=eq.${user.id}`,
+                },
+                () => {
+                    // Invalidate the notifications query to refetch
+                    queryClient.invalidateQueries({ queryKey: ["notifications", user.id] });
+                    queryClient.invalidateQueries({ queryKey: ["unread_notifications_count", user.id] });
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [user, queryClient]);
+
     const handleNotificationClick = (reviewId: string, commentId: string) => {
         onOpenChange(false);
         // Navigate to review and pass commentId in state so we can scroll to it

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import AuthDialog from "@/components/AuthDialog";
 import UserProfileSheet from "@/components/UserProfileSheet";
 import NotificationsSheet from "@/components/NotificationsSheet";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Sheet,
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/sheet";
 
 const Header = () => {
+  const queryClient = useQueryClient();
   const { pathname } = useLocation();
   const { user, displayName, loading, signOut } = useAuth();
   const { isInstallable, promptInstall } = usePWAInstall();
@@ -46,6 +47,32 @@ const Header = () => {
     },
     enabled: !!user,
   });
+
+  // Real-time notifications subscription
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel(`notifications-count-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          // Invalidate the count query to refetch
+          queryClient.invalidateQueries({ queryKey: ["unread_notifications_count", user.id] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, queryClient]);
 
   // Pull-to-refresh logic
   const touchStartY = useRef<number | null>(null);
